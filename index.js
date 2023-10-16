@@ -129,12 +129,9 @@ document.getElementById('addLineBtn').addEventListener('click', function () {
 });
 
 
-const cancelButton = document.getElementById('cancelButton'); // Cancel işlemleri olacak 
-cancelButton.addEventListener('click', function () {
-    
-});
 
- 
+
+
 
 
 container.addEventListener('click', function (event) {
@@ -199,7 +196,7 @@ container.addEventListener('click', function (event) {
 
             const newPointSet = pointLineList.slice();
             pointLineSets.push(newPointSet);
-            pointLineList.length = 0;
+
         }
     }
 
@@ -231,7 +228,6 @@ container.addEventListener('click', function (event) {
                 addingTrianglePoint = false;
                 const newPointSet = pointTriangleList.slice();
                 pointTriangleSets.push(newPointSet);
-                pointTriangleList.length = 0;
             }
         }
     }
@@ -279,11 +275,50 @@ function drawLine(point1, point2) {
     container.appendChild(line);
 }
 
+
+const cancelButton = document.getElementById('cancelButton'); // Cancel işlemleri olacak 
+cancelButton.addEventListener('click', function () {
+    for (const point of pointLineList) {
+        const pointElement = document.getElementById(point.id);
+        if (pointElement) {
+            pointElement.remove(); // Noktayı container'dan sil
+        }
+    }
+    for(const line of lineList){
+        const lineElement = document.getElementById(line.id);
+        if (lineElement) {
+            lineElement.remove(); // Çizgiyi container'dan sil
+        }
+    }
+
+    // Silmek istediğiniz üçgen noktalarını ve çizgileri burada silin
+    for (const point of pointTriangleList) {
+        const pointElement = document.getElementById(point.id);
+        if (pointElement) {
+            pointElement.remove(); // Noktayı container'dan sil
+        }
+    }
+
+    // Silme işleminden sonra dizileri temizleyin
+    pointLineList.length = 0;
+    lineList.length=0;
+    connectedPoints.length = 0;
+    pointTriangleList.length = 0;
+    pointTriangleSets.length = 0;
+
+    addingLinePoint = false;
+    addingTrianglePoint = false;
+
+});
+
 function addSyllableCardToList() {
+    pointLineList.length = 0
+    pointTriangleList.length = 0;
+
     var heceIsmi = document.getElementById('hece_ismi').value;
     var selectedRadioValue = getSelectedRadioValue('uygarlik');
     if (heceIsmi == "" || selectedRadioValue == "") {
-        alert("Hece ismi ve uygarlık seçilmeli")
+        alert("Hece ismi ve uygarlik seçilmeli")
     }
     else if (heceIsmi != "" && selectedRadioValue != "" && (pointTriangleSets.length > 0 || pointLineSets.length > 0)) {
         var syllableList = [];
@@ -314,7 +349,7 @@ function addSyllableCardToList() {
         successAlert.style.display = "block"; // Mesajı görüntüle
         setTimeout(function () {
             successAlert.style.display = "none"; // 2 saniye sonra gizle
-        }, 2000); // 2 saniye = 2000 milisaniye
+        }, 1000); // 2 saniye = 2000 milisaniye
         lineList.length = 0;
 
 
