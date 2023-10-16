@@ -40,3 +40,12 @@
 .button-container{
     width: 120px;
 }
+#successAlert {
+    display: none; /* Başlangıçta gizli */
+}
+#syllables-container {
+    max-height: 300px; /* Belirli bir maksimum yükseklik ayarlayın */
+    max-width: 300px;
+    overflow-x: scroll; /* Dikey kaydırma çubuğunu etkinleştir */
+
+}

@@ -15,6 +15,7 @@ var lineCounter = 0; // Çizgiye benzersiz bir id atamak için sayaç
 var dotCounter = 0; // Noktaya benzersiz id atamak için sayaç
 
 const MIN_DISTANCE_THRESHOLD = 10; // Eklenen çizgi  ile üçgen noktalarının koordinatları arasındaki mesafe bundan küçükse 
+const connectedPoints = [];
 
 const totalImages = 3;
 var currentImageIndex = 1;
@@ -46,7 +47,7 @@ function loadPrevImage() {
 
 document.getElementById('nextButton').addEventListener('click', loadNextImage);
 document.getElementById('prevButton').addEventListener('click', loadPrevImage);
-document.getElementById('addBtn').addEventListener('click', addSyllableCardToList);
+document.getElementById('addSyllable').addEventListener('click', addSyllableCardToList);
 
 var zoomInButton = document.getElementById("zoomInButton");
 var zoomOutButton = document.getElementById("zoomOutButton");
@@ -128,6 +129,12 @@ document.getElementById('addLineBtn').addEventListener('click', function () {
 });
 
 
+const cancelButton = document.getElementById('cancelButton'); // Cancel işlemleri olacak 
+cancelButton.addEventListener('click', function () {
+    
+});
+
+ 
 
 
 container.addEventListener('click', function (event) {
@@ -141,29 +148,46 @@ container.addEventListener('click', function (event) {
         point.id = pointId;
         dotCounter++;
         point.className = 'point';
+
         point.dataset.originalX = (scrolledX) / zoomLevel;
         point.dataset.originalY = (scrolledY) / zoomLevel;
-       
 
-        // Çizginin eklenen noktası üçgenin hangi noktasına yakın for ile kontrol et
-        for (const triangleSet of pointTriangleSets) {  //Üçgen noktalarını pointTriangleSets buradan alıyoruz çünkü pointTriangleList listesini her üçgen oluştutduktan sonra temizliyoruz
+
+        let pointConnected = false; // Bu noktanın bağlantısı var mı?
+        let closestTrianglePoint = null; // En yakın üçgen noktasını saklamak için değişken. Eklenecek çizgi noktası herhangi iki noktayada 10 brden az mesafedeyse en yakınını bulmak için 
+
+        for (const triangleSet of pointTriangleSets) {
             for (const trianglePoint of triangleSet) {
+                if (!trianglePoint.connected) {
+                    const distance = Math.sqrt(
+                        Math.pow(parseFloat(point.dataset.originalX) - parseFloat(trianglePoint.x), 2) +
+                        Math.pow(parseFloat(point.dataset.originalY) - parseFloat(trianglePoint.y), 2)
+                    );
 
-                const distance = Math.sqrt(    // Çizginin eklenen noktasının  üçgenlerin noktaları arasındaki uzaklığı hesaplıyor. 5 ten küçükse çizginin o noktasını üçgenin o noktasına eşitliyor. 
-                    Math.pow(parseFloat(point.dataset.originalX) - parseFloat(trianglePoint.x), 2) +
-                    Math.pow(parseFloat(point.dataset.originalY) - parseFloat(trianglePoint.y), 2)
-                );
-
-                if (distance <= MIN_DISTANCE_THRESHOLD) { // Uzanlık 5 ten küçükse çizginin o koordinatını üçgenin o noktasına eşitle
-                    point.dataset.originalX = trianglePoint.x;
-                    point.dataset.originalY = trianglePoint.y;
-                    break; // Stop checking once a close point is found
+                    if (distance <= MIN_DISTANCE_THRESHOLD) {
+                        if (!closestTrianglePoint || distance < closestTrianglePoint.distance) {
+                            closestTrianglePoint = {
+                                point: trianglePoint,
+                                distance: distance
+                            };
+                        }
+                    }
                 }
             }
-
         }
 
-        pointLineList.push({ id: pointId, x: point.dataset.originalX, y: point.dataset.originalY });
+        if (closestTrianglePoint) {
+            point.dataset.originalX = closestTrianglePoint.point.x;
+            point.dataset.originalY = closestTrianglePoint.point.y;
+            point.style.backgroundColor = 'red';
+            closestTrianglePoint.point.connected = true; // Bağlantıyı işaretle
+            pointConnected = true; // Bu noktanın bağlantısı olduğunu işaretle
+        }
+
+        if (pointConnected) {
+            connectedPoints.push(point); // Bağlantı yapılan noktayı diziye ekleyin
+        }
+        pointLineList.push({ id: pointId, x: point.dataset.originalX, y: point.dataset.originalY, color: 'pink' });
         container.appendChild(point);
 
         if (pointLineList.length == 2) {
@@ -215,6 +239,8 @@ container.addEventListener('click', function (event) {
     updateLabelPositions();
 });
 
+
+
 function drawLine(point1, point2) {
     const line = document.createElement("div");
     line.className = 'line'
@@ -254,9 +280,9 @@ function drawLine(point1, point2) {
 }
 
 function addSyllableCardToList() {
-    var heceIsmi = document.getElementById('kelime_ismi').value;
+    var heceIsmi = document.getElementById('hece_ismi').value;
     var selectedRadioValue = getSelectedRadioValue('uygarlik');
-    if (heceIsmi == "" ||selectedRadioValue == "" ) {
+    if (heceIsmi == "" || selectedRadioValue == "") {
         alert("Hece ismi ve uygarlık seçilmeli")
     }
     else if (heceIsmi != "" && selectedRadioValue != "" && (pointTriangleSets.length > 0 || pointLineSets.length > 0)) {
@@ -281,13 +307,21 @@ function addSyllableCardToList() {
             syllableList.push(line)
         }
         pointSets.push(syllableList)
-        lineList.length = 0;
         pointTriangleSets.length = 0;
         pointLineSets.length = 0;
-        updateCoordinateList(heceIsmi, selectedRadioValue); // Koordinat listesini güncelle
+
+        const successAlert = document.getElementById("successAlert");
+        successAlert.style.display = "block"; // Mesajı görüntüle
+        setTimeout(function () {
+            successAlert.style.display = "none"; // 2 saniye sonra gizle
+        }, 2000); // 2 saniye = 2000 milisaniye
+        lineList.length = 0;
+
+
+        updatesyllableList(heceIsmi, selectedRadioValue); // Koordinat listesini güncelle
 
         //listeyi temizle radio button unchecked yap
-        document.getElementById('kelime_ismi').value = ""
+        document.getElementById('hece_ismi').value = ""
         var radioButtons = document.getElementsByName("uygarlik");
         for (var i = 0; i < radioButtons.length; i++) {
             radioButtons[i].checked = false;
@@ -298,9 +332,9 @@ function addSyllableCardToList() {
 
 
 }
-function updateCoordinateList(heceIsmi, selectedRadioValue) {
-    const coordinateList = document.getElementById('coordinateList');
-    coordinateList.innerHTML = ''; // Önce mevcut listeyi temizle
+function updatesyllableList(heceIsmi, selectedRadioValue) {
+    const syllableList = document.getElementById('syllableList');
+    syllableList.innerHTML = ''; // Önce mevcut listeyi temizle
 
     pointSets.forEach(function (pointSet, index) {
 
@@ -313,17 +347,16 @@ function updateCoordinateList(heceIsmi, selectedRadioValue) {
 
             card.innerHTML = `
                 <div class="card">
-                    <div class="card-body">
+                    
                         <h6 style="font-size:12px;">Hece Seti ${index + 1}</h6>
-                        <div style="font-size:12px;">Noktalar : ${filteredPointSet.map((point, pointIndex) => `Nokta ${pointIndex + 1}: X=${point.x}, Y=${point.y}`).join('   |   ')}</div>
                         <div style="font-size:12px;">Hece İsmi : ${heceIsmi}</div>
-                        <div style="font-size:12px;">Seçilen Dil : ${selectedRadioValue}</div>
-                        <button class="btn btn-danger btn-sm" onclick="deleteCard(${index})">Delete</button>
-                    </div>
+                        <div style="font-size:12px;"> Dil : ${selectedRadioValue}</div>
+                        <button class="btn-danger"  style="width:50px; height:20px; font-size:10px" onclick="deleteCard(${index})">Delete</button>
+                    
                 </div>
             `;
 
-            coordinateList.appendChild(card);
+            syllableList.appendChild(card);
         }
 
     });
@@ -360,5 +393,5 @@ function deleteCard(index) {
     pointSets.splice(index, 1);
 
     // Listeyi güncelle
-    updateCoordinateList();
+    updatesyllableList();
 }
