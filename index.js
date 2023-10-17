@@ -2,12 +2,14 @@ var addingTrianglePoint = false; // Üçgen eklemek için kullanılacak değişk
 var addingLinePoint = false;   // Çizgi eklemek için kullanıclacak değişken
 
 const pointTriangleList = []; // Üçgen nokta koordinatlarını saklamak için bir dizi
+const pointTriangleListTrash = [];
 const pointLineList = [];    // Çizgi nokta koordinatlarını saklamak için bir dizi
+const pointLineListTrash = [];
 
 const pointTriangleSets = []; // Üçgen nokta kümelerini saklamak için bir dizi.Yani bir üçgen oluşturulduğunda dizi olarak tüm koordinatlar bunun içinde olacak 
 const pointLineSets = [];     // Çizgi nokta kümelerini saklamak için kullanılacak dizi
 const pointSets = [];         // Üçgen ve çizgilerden oluşan bir harf seti. Save bastığında setler içerisindeki nokta ve çizgileri alıp bu son liste içerisinde o heceyi saklayacak
-
+const wordSets = [];
 const container = document.getElementById('container-image');
 
 var lineList = []; //eklenen her bir çizgiyi kaydettiğimiz yer . Su an çizgilerle bir işimiz yok ama yinede bir id ile kaydettim hepsini.
@@ -27,6 +29,166 @@ var originalImageHeight = tablet.height;
 const initialImage = document.getElementById('tablet');
 tablet.src = 'img/tablet1.jpeg';
 
+const cancelButton = document.getElementById('cancelButton'); // Cancel işlemleri olacak 
+
+var zoomInButton = document.getElementById("zoomInButton");
+var zoomOutButton = document.getElementById("zoomOutButton");
+var zoomLevel = 1;
+
+zoomInButton.addEventListener("click", zoomIn);
+zoomOutButton.addEventListener("click", zoomOut);
+
+document.getElementById('nextButton').addEventListener('click', loadNextImage);
+document.getElementById('prevButton').addEventListener('click', loadPrevImage);
+document.getElementById('addSyllable').addEventListener('click', addSyllableCardToList);
+document.getElementById('addWord').addEventListener('click', addWordCard);
+
+
+document.getElementById('addTriangleBtn').addEventListener('click', function () {
+    addingTrianglePoint = true; // add triangle butonuna tıklandığında eklemeye başlayın
+    addingLinePoint = false;
+});
+
+document.getElementById('addLineBtn').addEventListener('click', function () {
+    addingLinePoint = true; // add line butonuna tıklandığında eklemeye başlayın
+    addingTrianglePoint = false;
+});
+
+container.addEventListener('click', function (event) {
+    const containerRect = container.getBoundingClientRect();
+    const scrolledX = event.clientX - containerRect.left + container.scrollLeft;
+    const scrolledY = event.clientY - containerRect.top + container.scrollTop;
+
+    if (addingLinePoint) {
+        const point = document.createElement('div');
+        const pointId = `point-${dotCounter}`;
+        point.id = pointId;
+        dotCounter++;
+        point.className = 'point';
+
+        point.dataset.originalX = (scrolledX) / zoomLevel;
+        point.dataset.originalY = (scrolledY) / zoomLevel;
+
+
+
+        // Çizginin eklenen noktası üçgenin hangi noktasına yakın for ile kontrol et
+        if (pointLineList.length === 0) {
+            let closestTrianglePoint = null; // En yakın üçgen noktasını saklamak için değişken
+            let minDistance = Number.MAX_VALUE; // En küçük mesafeyi saklamak için değişken
+
+            for (const triangleSet of pointTriangleSets) {
+                for (const trianglePoint of triangleSet) {
+                    if (!trianglePoint.connected) {
+                        const distance = Math.sqrt(
+                            Math.pow(parseFloat(point.dataset.originalX) - parseFloat(trianglePoint.x), 2) +
+                            Math.pow(parseFloat(point.dataset.originalY) - parseFloat(trianglePoint.y), 2)
+                        );
+
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestTrianglePoint = trianglePoint;
+                        }
+                    }
+                }
+            }
+
+            if (closestTrianglePoint) {
+                point.dataset.originalX = closestTrianglePoint.x;
+                point.dataset.originalY = closestTrianglePoint.y;
+                point.style.backgroundColor = 'pink';
+                closestTrianglePoint.connected = true; // Bağlantıyı işaretle
+            }
+        }
+
+        pointLineList.push({ id: pointId, x: point.dataset.originalX, y: point.dataset.originalY });
+        container.appendChild(point);
+
+        if (pointLineList.length == 2) {
+            const firstPoint = pointLineList[0];
+            const secondPoint = pointLineList[1];
+
+            drawLine(document.getElementById(firstPoint.id), document.getElementById(secondPoint.id));
+
+            const newPointSet = pointLineList.slice();
+            pointLineSets.push(newPointSet);
+            addingLinePoint = false;
+            pointLineList.forEach(item => pointLineListTrash.push(item))
+            pointLineList.length = 0;
+
+        }
+    }
+
+    if (addingTrianglePoint) {
+        const point = document.createElement('div');
+        const pointId = `point-${dotCounter}`;
+        point.id = pointId;
+        dotCounter++;
+        point.className = 'point';
+        point.dataset.originalX = (scrolledX) / zoomLevel;
+        point.dataset.originalY = (scrolledY) / zoomLevel;
+
+
+        pointTriangleList.push({ id: pointId, x: point.dataset.originalX, y: point.dataset.originalY });
+
+
+        container.appendChild(point);
+
+        if (pointTriangleList.length >= 2) {
+            const firstPoint = pointTriangleList[0];
+            const startPoint = pointTriangleList[pointTriangleList.length - 2];
+            const endPoint = pointTriangleList[pointTriangleList.length - 1];
+
+            drawLine(document.getElementById(startPoint.id), document.getElementById(endPoint.id));
+
+            if (pointTriangleList.length == 3) {
+                drawLine(document.getElementById(firstPoint.id), document.getElementById(endPoint.id));
+
+                addingTrianglePoint = false;
+                const newPointSet = pointTriangleList.slice();
+                pointTriangleSets.push(newPointSet);
+                pointTriangleList.forEach(item => pointTriangleListTrash.push(item))
+                pointTriangleList.length = 0
+            }
+        }
+    }
+
+    updateLabelPositions();
+});
+
+cancelButton.addEventListener('click', function () {
+    for (const point of pointLineListTrash) {
+        const pointElement = document.getElementById(point.id);
+        if (pointElement) {
+            pointElement.remove(); // Noktayı container'dan sil
+        }
+    }
+    for (const line of lineList) {
+        const lineElement = document.getElementById(line.id);
+        if (lineElement) {
+            lineElement.remove(); // Çizgiyi container'dan sil
+        }
+    }
+
+    // Silmek istediğiniz üçgen noktalarını ve çizgileri burada silin
+    for (const point of pointTriangleListTrash) {
+        const pointElement = document.getElementById(point.id);
+        if (pointElement) {
+            pointElement.remove(); // Noktayı container'dan sil
+        }
+    }
+
+    // Silme işleminden sonra dizileri temizleyin
+    lineList.length = 0;
+    connectedPoints.length = 0;
+    pointTriangleList.length = 0;
+    pointTriangleSets.length = 0;
+    pointLineSets.length = 0;
+
+    addingLinePoint = false;
+    addingTrianglePoint = false;
+
+});
+
 function loadNextImage() {
     currentImageIndex++;
     if (currentImageIndex > totalImages) {
@@ -44,17 +206,6 @@ function loadPrevImage() {
     const image = document.getElementById('tablet');
     image.src = `img/tablet${currentImageIndex}.jpeg`;
 }
-
-document.getElementById('nextButton').addEventListener('click', loadNextImage);
-document.getElementById('prevButton').addEventListener('click', loadPrevImage);
-document.getElementById('addSyllable').addEventListener('click', addSyllableCardToList);
-
-var zoomInButton = document.getElementById("zoomInButton");
-var zoomOutButton = document.getElementById("zoomOutButton");
-var zoomLevel = 1;
-
-zoomInButton.addEventListener("click", zoomIn);
-zoomOutButton.addEventListener("click", zoomOut);
 
 function zoomIn() {
     zoomLevel += 0.1;
@@ -118,125 +269,6 @@ function updateLinePositions() {
     });
 }
 
-document.getElementById('addTriangleBtn').addEventListener('click', function () {
-    addingTrianglePoint = true; // add triangle butonuna tıklandığında eklemeye başlayın
-    addingLinePoint = false;
-});
-
-document.getElementById('addLineBtn').addEventListener('click', function () {
-    addingLinePoint = true; // add line butonuna tıklandığında eklemeye başlayın
-    addingTrianglePoint = false;
-});
-
-
-
-
-
-
-
-container.addEventListener('click', function (event) {
-    const containerRect = container.getBoundingClientRect();
-    const scrolledX = event.clientX - containerRect.left + container.scrollLeft;
-    const scrolledY = event.clientY - containerRect.top + container.scrollTop;
-
-    if (addingLinePoint) {
-        const point = document.createElement('div');
-        const pointId = `point-${dotCounter}`;
-        point.id = pointId;
-        dotCounter++;
-        point.className = 'point';
-
-        point.dataset.originalX = (scrolledX) / zoomLevel;
-        point.dataset.originalY = (scrolledY) / zoomLevel;
-
-
-        let pointConnected = false; // Bu noktanın bağlantısı var mı?
-        let closestTrianglePoint = null; // En yakın üçgen noktasını saklamak için değişken. Eklenecek çizgi noktası herhangi iki noktayada 10 brden az mesafedeyse en yakınını bulmak için 
-
-        for (const triangleSet of pointTriangleSets) {
-            for (const trianglePoint of triangleSet) {
-                if (!trianglePoint.connected) {
-                    const distance = Math.sqrt(
-                        Math.pow(parseFloat(point.dataset.originalX) - parseFloat(trianglePoint.x), 2) +
-                        Math.pow(parseFloat(point.dataset.originalY) - parseFloat(trianglePoint.y), 2)
-                    );
-
-                    if (distance <= MIN_DISTANCE_THRESHOLD) {
-                        if (!closestTrianglePoint || distance < closestTrianglePoint.distance) {
-                            closestTrianglePoint = {
-                                point: trianglePoint,
-                                distance: distance
-                            };
-                        }
-                    }
-                }
-            }
-        }
-
-        if (closestTrianglePoint) {
-            point.dataset.originalX = closestTrianglePoint.point.x;
-            point.dataset.originalY = closestTrianglePoint.point.y;
-            point.style.backgroundColor = 'red';
-            closestTrianglePoint.point.connected = true; // Bağlantıyı işaretle
-            pointConnected = true; // Bu noktanın bağlantısı olduğunu işaretle
-        }
-
-        if (pointConnected) {
-            connectedPoints.push(point); // Bağlantı yapılan noktayı diziye ekleyin
-        }
-        pointLineList.push({ id: pointId, x: point.dataset.originalX, y: point.dataset.originalY, color: 'pink' });
-        container.appendChild(point);
-
-        if (pointLineList.length == 2) {
-            const firstPoint = pointLineList[0];
-            const secondPoint = pointLineList[1];
-
-            drawLine(document.getElementById(firstPoint.id), document.getElementById(secondPoint.id));
-            addingLinePoint = false;
-
-            const newPointSet = pointLineList.slice();
-            pointLineSets.push(newPointSet);
-
-        }
-    }
-
-    if (addingTrianglePoint) {
-        const point = document.createElement('div');
-        const pointId = `point-${dotCounter}`;
-        point.id = pointId;
-        dotCounter++;
-        point.className = 'point';
-        point.dataset.originalX = (scrolledX) / zoomLevel;
-        point.dataset.originalY = (scrolledY) / zoomLevel;
-
-
-        pointTriangleList.push({ id: pointId, x: point.dataset.originalX, y: point.dataset.originalY });
-
-
-        container.appendChild(point);
-
-        if (pointTriangleList.length >= 2) {
-            const firstPoint = pointTriangleList[0];
-            const startPoint = pointTriangleList[pointTriangleList.length - 2];
-            const endPoint = pointTriangleList[pointTriangleList.length - 1];
-
-            drawLine(document.getElementById(startPoint.id), document.getElementById(endPoint.id));
-
-            if (pointTriangleList.length == 3) {
-                drawLine(document.getElementById(firstPoint.id), document.getElementById(endPoint.id));
-
-                addingTrianglePoint = false;
-                const newPointSet = pointTriangleList.slice();
-                pointTriangleSets.push(newPointSet);
-            }
-        }
-    }
-
-    updateLabelPositions();
-});
-
-
-
 function drawLine(point1, point2) {
     const line = document.createElement("div");
     line.className = 'line'
@@ -276,126 +308,6 @@ function drawLine(point1, point2) {
 }
 
 
-const cancelButton = document.getElementById('cancelButton'); // Cancel işlemleri olacak 
-cancelButton.addEventListener('click', function () {
-    for (const point of pointLineList) {
-        const pointElement = document.getElementById(point.id);
-        if (pointElement) {
-            pointElement.remove(); // Noktayı container'dan sil
-        }
-    }
-    for(const line of lineList){
-        const lineElement = document.getElementById(line.id);
-        if (lineElement) {
-            lineElement.remove(); // Çizgiyi container'dan sil
-        }
-    }
-
-    // Silmek istediğiniz üçgen noktalarını ve çizgileri burada silin
-    for (const point of pointTriangleList) {
-        const pointElement = document.getElementById(point.id);
-        if (pointElement) {
-            pointElement.remove(); // Noktayı container'dan sil
-        }
-    }
-
-    // Silme işleminden sonra dizileri temizleyin
-    pointLineList.length = 0;
-    lineList.length=0;
-    connectedPoints.length = 0;
-    pointTriangleList.length = 0;
-    pointTriangleSets.length = 0;
-
-    addingLinePoint = false;
-    addingTrianglePoint = false;
-
-});
-
-function addSyllableCardToList() {
-    pointLineList.length = 0
-    pointTriangleList.length = 0;
-
-    var heceIsmi = document.getElementById('hece_ismi').value;
-    var selectedRadioValue = getSelectedRadioValue('uygarlik');
-    if (heceIsmi == "" || selectedRadioValue == "") {
-        alert("Hece ismi ve uygarlik seçilmeli")
-    }
-    else if (heceIsmi != "" && selectedRadioValue != "" && (pointTriangleSets.length > 0 || pointLineSets.length > 0)) {
-        var syllableList = [];
-
-        for (const triangleSet of pointTriangleSets) {
-            for (const point of triangleSet) {
-                if (!syllableList.some(item => item.x === point.x && item.y === point.y && item.id === point.id)) {
-                    syllableList.push({ id: point.id, x: point.x, y: point.y });
-                }
-            }
-        }
-
-        for (const lineSet of pointLineSets) {
-            for (const point of lineSet) {
-                if (!syllableList.some(item => item.x === point.x && item.y === point.y && item.id === point.id)) {
-                    syllableList.push({ id: point.id, x: point.x, y: point.y });
-                }
-            }
-        }
-        for (const line of lineList) {
-            syllableList.push(line)
-        }
-        pointSets.push(syllableList)
-        pointTriangleSets.length = 0;
-        pointLineSets.length = 0;
-
-        const successAlert = document.getElementById("successAlert");
-        successAlert.style.display = "block"; // Mesajı görüntüle
-        setTimeout(function () {
-            successAlert.style.display = "none"; // 2 saniye sonra gizle
-        }, 1000); // 2 saniye = 2000 milisaniye
-        lineList.length = 0;
-
-
-        updatesyllableList(heceIsmi, selectedRadioValue); // Koordinat listesini güncelle
-
-        //listeyi temizle radio button unchecked yap
-        document.getElementById('hece_ismi').value = ""
-        var radioButtons = document.getElementsByName("uygarlik");
-        for (var i = 0; i < radioButtons.length; i++) {
-            radioButtons[i].checked = false;
-        }
-
-
-    }
-
-
-}
-function updatesyllableList(heceIsmi, selectedRadioValue) {
-    const syllableList = document.getElementById('syllableList');
-    syllableList.innerHTML = ''; // Önce mevcut listeyi temizle
-
-    pointSets.forEach(function (pointSet, index) {
-
-        const filteredPointSet = pointSet.filter(point => point.hasOwnProperty('x') && point.hasOwnProperty('y'));
-
-        if (filteredPointSet.length > 0) {
-            const card = document.createElement('li');
-            card.className = 'list-group-item';
-            // Radio düğmesi değerini al
-
-            card.innerHTML = `
-                <div class="card">
-                    
-                        <h6 style="font-size:12px;">Hece Seti ${index + 1}</h6>
-                        <div style="font-size:12px;">Hece İsmi : ${heceIsmi}</div>
-                        <div style="font-size:12px;"> Dil : ${selectedRadioValue}</div>
-                        <button class="btn-danger"  style="width:50px; height:20px; font-size:10px" onclick="deleteCard(${index})">Delete</button>
-                    
-                </div>
-            `;
-
-            syllableList.appendChild(card);
-        }
-
-    });
-}
 function getSelectedRadioValue(name) {
     const radioButtons = document.getElementsByName(name);
     for (const radioButton of radioButtons) {
@@ -429,4 +341,164 @@ function deleteCard(index) {
 
     // Listeyi güncelle
     updatesyllableList();
+}
+function addSyllableCardToList() {
+    pointLineList.length = 0
+    pointTriangleList.length = 0;
+
+    var heceIsmi = document.getElementById('hece_ismi').value;
+    var selectedRadioValue = getSelectedRadioValue('uygarlik');
+    if (heceIsmi == "" || selectedRadioValue == "") {
+        alert("Hece ismi ve uygarlik seçilmeli")
+    }
+    else if (heceIsmi != "" && selectedRadioValue != "" && (pointTriangleSets.length > 0 || pointLineSets.length > 0)) {
+        var syllableList = [];
+
+        for (const triangleSet of pointTriangleSets) {
+            for (const point of triangleSet) {
+                if (!syllableList.some(item => item.x === point.x && item.y === point.y && item.id === point.id)) {
+                    syllableList.push({ id: point.id, x: point.x, y: point.y });
+                }
+            }
+        }
+
+        for (const lineSet of pointLineSets) {
+            for (const point of lineSet) {
+                if (!syllableList.some(item => item.x === point.x && item.y === point.y && item.id === point.id)) {
+                    syllableList.push({ id: point.id, x: point.x, y: point.y });
+                }
+            }
+        }
+        for (const line of lineList) {
+            syllableList.push(line)
+        }
+
+        const heceName = {
+            heceismi: heceIsmi, // Anahtar: Değer
+        };
+        const selectedValue = {
+            selectedRadioValue: selectedRadioValue, // Anahtar: Değer
+        };
+        syllableList.push(heceName);
+        syllableList.push(selectedValue);
+
+        pointSets.push(syllableList)
+        pointTriangleSets.length = 0;
+        pointLineSets.length = 0;
+
+        const successAlert = document.getElementById("successAlert");
+        successAlert.style.display = "block"; // Mesajı görüntüle
+        setTimeout(function () {
+            successAlert.style.display = "none"; // 2 saniye sonra gizle
+        }, 2000); // 2 saniye = 2000 milisaniye
+        lineList.length = 0;
+
+
+        updatesyllableList(heceIsmi, selectedRadioValue); // Koordinat listesini güncelle
+
+        //listeyi temizle radio button unchecked yap
+        document.getElementById('hece_ismi').value = ""
+        var radioButtons = document.getElementsByName("uygarlik");
+        for (var i = 0; i < radioButtons.length; i++) {
+            radioButtons[i].checked = false;
+        }
+
+
+    }
+
+
+}
+function updatesyllableList(heceIsmi, selectedRadioValue) {
+    const syllableList = document.getElementById('syllableList');
+    syllableList.innerHTML = ''; // Önce mevcut listeyi temizle
+
+    pointSets.forEach(function (pointSet, index) {
+
+        const filteredPointSet = pointSet.filter(point => point.hasOwnProperty('x') && point.hasOwnProperty('y'));
+
+        if (filteredPointSet.length > 0) {
+            const card = document.createElement('li');
+            card.innerHTML = `
+                <div class="card mr-3"  style="width:175px; height:100px;  " >
+                        <h6 style="font-size:12px;">Hece Seti ${index + 1}</h6>
+                        <div style="font-size:12px;">Hece İsmi : ${heceIsmi}</div>
+                        <div style="font-size:12px;"> Dil : ${selectedRadioValue}</div>
+                        <button class="btn-danger"  style="width:50px; height:20px; font-size:10px" onclick="deleteCard(${index})">Delete</button> 
+                </div>
+            `;
+            syllableList.appendChild(card);
+        }
+    });
+}
+
+function addWordCard() {
+    const wordList = document.getElementById('wordList');
+    const kelimeIsmi = document.getElementById('kelime_ismi').value;
+
+    if (pointSets.length > 0 && kelimeIsmi != "") {
+        // PointSets'teki tüm hece listelerini tek bir liste öğesi olarak wordSets'e ekle
+        wordSets.push({ kelime: kelimeIsmi, heceList: [...pointSets] });
+        // PointSets'i temizle
+        pointSets.length = 0;
+
+        // Hece listesini temizle
+        const syllableList = document.getElementById('syllableList');
+        syllableList.innerHTML = '';
+
+        // Kelime kartlarını oluştur ve listeye ekle
+        wordList.innerHTML = ''; // Önce mevcut kelime kartlarını temizle
+
+        wordSets.forEach(function (word, index) {
+            const card = document.createElement('li');
+            card.innerHTML = `
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Kelime: ${word.kelime}</h6>
+                        <ul>
+                            ${word.heceList.map((hece, heceIndex) => `
+                                <li>Hece Seti ${heceIndex + 1} </li>
+                            `).join('')}
+                        </ul>
+                        <button class="btn-danger"  style="width:50px; height:20px; font-size:10px" onclick="deleteCardKelime(${index})">Delete</button> 
+                    </div>
+                </div>
+            `;
+            wordList.appendChild(card);
+        });
+    }
+}
+function deleteCardKelime(index) {
+    if (index >= 0 && index < wordSets.length) {
+        const deletedItems = wordSets[index].heceList;
+        // Silinecek noktaları ve çizgileri container üzerinden sil
+        deletedItems.forEach(item => {
+
+            item.forEach(deleteItem => {
+                if (deleteItem.hasOwnProperty('x') && deleteItem.hasOwnProperty('y')) {
+                    const pointElement = document.getElementById(deleteItem.id);
+
+                    if (pointElement) {
+                        pointElement.remove(); // Noktayı container'dan sil
+                    }
+                } else if (deleteItem.hasOwnProperty('startPoint') && deleteItem.hasOwnProperty('endPoint')) {
+                    const lineElement = document.getElementById(deleteItem.id);
+                    if (lineElement) {
+                        lineElement.remove(); // Çizgiyi container'dan sil
+                    }
+                }
+            })
+
+        });
+
+        // Kelime kartını listeden kaldır
+        wordSets.splice(index, 1);
+        const wordList = document.getElementById('wordList');
+        const cards = wordList.querySelectorAll('li');
+        if (cards[index]) {
+            cards[index].remove();
+        }
+
+        // Listeyi güncelle
+        addWordCard();
+    }
 }
