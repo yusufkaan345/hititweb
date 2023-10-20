@@ -9,7 +9,7 @@ const pointLineListTrash = [];
 const pointTriangleSets = []; // Üçgen nokta kümelerini saklamak için bir dizi.Yani bir üçgen oluşturulduğunda dizi olarak tüm koordinatlar bunun içinde olacak 
 const pointLineSets = [];     // Çizgi nokta kümelerini saklamak için kullanılacak dizi
 const pointSets = [];         // Üçgen ve çizgilerden oluşan bir harf seti. Save bastığında setler içerisindeki nokta ve çizgileri alıp bu son liste içerisinde o heceyi saklayacak
-const wordSets = [];
+const wordSets = [];          //hecelerden oluşan kelimeleri sakladığımız yer
 const container = document.getElementById('container-image');
 
 var lineList = []; //eklenen her bir çizgiyi kaydettiğimiz yer . Su an çizgilerle bir işimiz yok ama yinede bir id ile kaydettim hepsini.
@@ -41,7 +41,7 @@ zoomOutButton.addEventListener("click", zoomOut);
 document.getElementById('nextButton').addEventListener('click', loadNextImage);
 document.getElementById('prevButton').addEventListener('click', loadPrevImage);
 document.getElementById('addSyllable').addEventListener('click', addSyllableCardToList);
-document.getElementById('addWord').addEventListener('click', addWordCard);
+document.getElementById('addWordBtn').addEventListener('click', addWordCard);
 
 
 document.getElementById('addTriangleBtn').addEventListener('click', function () {
@@ -149,6 +149,13 @@ container.addEventListener('click', function (event) {
                 pointTriangleList.forEach(item => pointTriangleListTrash.push(item))
                 pointTriangleList.length = 0
             }
+        }
+        if (syllableList.length>0) {
+            // Eğer syllableList dolu ise bu kısmı çalıştır
+            const syllableListIds = syllableList.map(item => item.id);
+    
+            pointLineListTrash = pointLineListTrash.filter(item => !syllableListIds.includes(item.id));
+            pointTriangleListTrash = pointTriangleListTrash.filter(item => !syllableListIds.includes(item.id));
         }
     }
 
@@ -307,7 +314,6 @@ function drawLine(point1, point2) {
     container.appendChild(line);
 }
 
-
 function getSelectedRadioValue(name) {
     const radioButtons = document.getElementsByName(name);
     for (const radioButton of radioButtons) {
@@ -351,6 +357,9 @@ function addSyllableCardToList() {
     if (heceIsmi == "" || selectedRadioValue == "") {
         alert("Hece ismi ve uygarlik seçilmeli")
     }
+    if( (pointTriangleSets.length <= 0 && pointLineSets.length <= 0)){
+        alert("Yeni bir Üçgen veya Çizgi eklenmedi ")
+    }
     else if (heceIsmi != "" && selectedRadioValue != "" && (pointTriangleSets.length > 0 || pointLineSets.length > 0)) {
         var syllableList = [];
 
@@ -358,6 +367,8 @@ function addSyllableCardToList() {
             for (const point of triangleSet) {
                 if (!syllableList.some(item => item.x === point.x && item.y === point.y && item.id === point.id)) {
                     syllableList.push({ id: point.id, x: point.x, y: point.y });
+                    removeFromTrash(point, pointTriangleListTrash); // Noktayı trash'ten kaldır
+
                 }
             }
         }
@@ -366,6 +377,8 @@ function addSyllableCardToList() {
             for (const point of lineSet) {
                 if (!syllableList.some(item => item.x === point.x && item.y === point.y && item.id === point.id)) {
                     syllableList.push({ id: point.id, x: point.x, y: point.y });
+                    removeFromTrash(point, pointLineListTrash); // Noktayı trash'ten kaldır
+
                 }
             }
         }
@@ -381,7 +394,6 @@ function addSyllableCardToList() {
         };
         syllableList.push(heceName);
         syllableList.push(selectedValue);
-
         pointSets.push(syllableList)
         pointTriangleSets.length = 0;
         pointLineSets.length = 0;
@@ -394,7 +406,7 @@ function addSyllableCardToList() {
         lineList.length = 0;
 
 
-        updatesyllableList(heceIsmi, selectedRadioValue); // Koordinat listesini güncelle
+        updatesyllableList(); // Koordinat listesini güncelle
 
         //listeyi temizle radio button unchecked yap
         document.getElementById('hece_ismi').value = ""
@@ -408,15 +420,24 @@ function addSyllableCardToList() {
 
 
 }
-function updatesyllableList(heceIsmi, selectedRadioValue) {
+function removeFromTrash(point, trash) {
+    const index = trash.findIndex(item => item.id === point.id);
+    if (index !== -1) {
+        trash.splice(index, 1); // Noktayı trash'ten kaldır
+    }
+}
+function updatesyllableList() {
     const syllableList = document.getElementById('syllableList');
     syllableList.innerHTML = ''; // Önce mevcut listeyi temizle
 
     pointSets.forEach(function (pointSet, index) {
 
         const filteredPointSet = pointSet.filter(point => point.hasOwnProperty('x') && point.hasOwnProperty('y'));
+        const heceIsmi = pointSet.find(point => point.hasOwnProperty('heceismi'))?.heceismi || "";
+        const selectedRadioValue = pointSet.find(point => point.hasOwnProperty('selectedRadioValue'))?.selectedRadioValue || "";
 
         if (filteredPointSet.length > 0) {
+
             const card = document.createElement('li');
             card.innerHTML = `
                 <div class="card mr-3"  style="width:175px; height:100px;  " >
@@ -434,7 +455,7 @@ function updatesyllableList(heceIsmi, selectedRadioValue) {
 function addWordCard() {
     const wordList = document.getElementById('wordList');
     const kelimeIsmi = document.getElementById('kelime_ismi').value;
-
+  
     if (pointSets.length > 0 && kelimeIsmi != "") {
         // PointSets'teki tüm hece listelerini tek bir liste öğesi olarak wordSets'e ekle
         wordSets.push({ kelime: kelimeIsmi, heceList: [...pointSets] });
@@ -449,27 +470,37 @@ function addWordCard() {
         wordList.innerHTML = ''; // Önce mevcut kelime kartlarını temizle
 
         wordSets.forEach(function (word, index) {
-            const card = document.createElement('li');
+            var card = document.createElement('li');
+            card.classList.add('wordCard');
+            const heceListItems = word.heceList.map((hece, heceIndex) => `
+            
+                <li>Hece ${heceIndex + 1}: Hece İsmi: ${hece[hece.length - 2].heceismi}, Dil: ${hece[hece.length - 1].selectedRadioValue}</li>
+            `).join('');
+
             card.innerHTML = `
                 <div class="card">
                     <div class="card-body">
                         <h6>Kelime: ${word.kelime}</h6>
                         <ul>
-                            ${word.heceList.map((hece, heceIndex) => `
-                                <li>Hece Seti ${heceIndex + 1} </li>
-                            `).join('')}
+                            ${heceListItems}
                         </ul>
-                        <button class="btn-danger"  style="width:50px; height:20px; font-size:10px" onclick="deleteCardKelime(${index})">Delete</button> 
+                        <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCardKelime(${index})">Delete</button> 
                     </div>
                 </div>
             `;
             wordList.appendChild(card);
+                    console.log(wordSets)
+
+            //input alanını temizleme
+            document.getElementById('kelime_ismi').value = ""
         });
     }
 }
 function deleteCardKelime(index) {
     if (index >= 0 && index < wordSets.length) {
+        
         const deletedItems = wordSets[index].heceList;
+       
         // Silinecek noktaları ve çizgileri container üzerinden sil
         deletedItems.forEach(item => {
 
@@ -491,9 +522,11 @@ function deleteCardKelime(index) {
         });
 
         // Kelime kartını listeden kaldır
-        wordSets.splice(index, 1);
+        wordSets.splice(index, 1);        
+
         const wordList = document.getElementById('wordList');
-        const cards = wordList.querySelectorAll('li');
+        const cards = wordList.querySelectorAll('.wordCard');
+       
         if (cards[index]) {
             cards[index].remove();
         }
