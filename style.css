@@ -12,7 +12,7 @@
 /* Chrome, Safari and Opera */
 #container-image::-webkit-scrollbar {
     width: 0px;
-    height: 6px;
+    height: 8px;
     
 }
 #container-image::-webkit-scrollbar-thumb {

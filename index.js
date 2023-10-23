@@ -116,6 +116,7 @@ container.addEventListener('click', function (event) {
             pointLineList.length = 0;
 
         }
+        
     }
 
     if (addingTrianglePoint) {
@@ -349,6 +350,19 @@ function deleteCard(index) {
     updatesyllableList();
 }
 function addSyllableCardToList() {
+    pointLineList.forEach(item =>{
+        const pointElement = document.getElementById(item.id);
+            if (pointElement) {
+                pointElement.remove(); // Noktayı container'dan sil
+            }
+    })
+    pointTriangleList.forEach(item =>{
+        const pointElement = document.getElementById(item.id);
+            if (pointElement) {
+                pointElement.remove(); // Noktayı container'dan sil
+            }
+    })  
+         
     pointLineList.length = 0
     pointTriangleList.length = 0;
 
