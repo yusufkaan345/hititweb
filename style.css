@@ -4,7 +4,14 @@
     height: 100%;
     border: 1px solid #0a0a0a;
     z-index: 1;
-    
+    overflow: scroll;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+/* Chrome, Safari and Opera */
+#container-image::-webkit-scrollbar {
+    display: none;
 }
 
 .point {
