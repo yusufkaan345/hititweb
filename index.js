@@ -95,7 +95,7 @@ container.addEventListener('click', function (event) {
             if (closestTrianglePoint) {
                 point.dataset.originalX = closestTrianglePoint.x;
                 point.dataset.originalY = closestTrianglePoint.y;
-                point.style.backgroundColor = 'pink';
+                point.style.backgroundColor = 'red';
                 closestTrianglePoint.connected = true; // Bağlantıyı işaretle
             }
         }

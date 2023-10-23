@@ -11,9 +11,13 @@
 
 /* Chrome, Safari and Opera */
 #container-image::-webkit-scrollbar {
-    display: none;
+    width: 0px;
+    height: 6px;
+    
 }
-
+#container-image::-webkit-scrollbar-thumb {
+    background: #a8e0eb; /* Kaydırma çubuğu rengi */
+  }
 .point {
     position: absolute;
     width: 4px;
