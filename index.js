@@ -12,6 +12,8 @@ const pointSets = [];         // Üçgen ve çizgilerden oluşan bir harf seti. 
 const wordSets = [];          //hecelerden oluşan kelimeleri sakladığımız yer
 const container = document.getElementById('container-image');
 
+var trashLine=[];
+
 var lineList = []; //eklenen her bir çizgiyi kaydettiğimiz yer . Su an çizgilerle bir işimiz yok ama yinede bir id ile kaydettim hepsini.
 var lineCounter = 0; // Çizgiye benzersiz bir id atamak için sayaç
 var dotCounter = 0; // Noktaya benzersiz id atamak için sayaç
@@ -68,7 +70,6 @@ container.addEventListener('click', function (event) {
 
         point.dataset.originalX = (scrolledX) / zoomLevel;
         point.dataset.originalY = (scrolledY) / zoomLevel;
-
 
 
         // Çizginin eklenen noktası üçgenin hangi noktasına yakın for ile kontrol et
@@ -128,7 +129,6 @@ container.addEventListener('click', function (event) {
         point.dataset.originalX = (scrolledX) / zoomLevel;
         point.dataset.originalY = (scrolledY) / zoomLevel;
 
-
         pointTriangleList.push({ id: pointId, x: point.dataset.originalX, y: point.dataset.originalY });
 
 
@@ -140,10 +140,10 @@ container.addEventListener('click', function (event) {
             const endPoint = pointTriangleList[pointTriangleList.length - 1];
 
             drawLine(document.getElementById(startPoint.id), document.getElementById(endPoint.id));
-
+            trashLine.push(startPoint.id)
             if (pointTriangleList.length == 3) {
                 drawLine(document.getElementById(firstPoint.id), document.getElementById(endPoint.id));
-
+                trashLine.length=0;
                 addingTrianglePoint = false;
                 const newPointSet = pointTriangleList.slice();
                 pointTriangleSets.push(newPointSet);
@@ -350,6 +350,17 @@ function deleteCard(index) {
     updatesyllableList();
 }
 function addSyllableCardToList() {
+    lineList.forEach(item=>{
+        trashLine.forEach(item2=>{
+            if(item.startPoint==item2){
+               const lineElement=document.getElementById(item.id)
+               if(lineElement){
+                lineElement.remove();
+               }
+            }
+        })
+       
+    })
     pointLineList.forEach(item =>{
         const pointElement = document.getElementById(item.id);
             if (pointElement) {
@@ -362,6 +373,7 @@ function addSyllableCardToList() {
                 pointElement.remove(); // Noktayı container'dan sil
             }
     })  
+    
          
     pointLineList.length = 0
     pointTriangleList.length = 0;
