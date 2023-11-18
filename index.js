@@ -10,6 +10,8 @@ const pointTriangleSets = []; // Üçgen nokta kümelerini saklamak için bir di
 const pointLineSets = [];     // Çizgi nokta kümelerini saklamak için kullanılacak dizi
 const pointSets = [];         // Üçgen ve çizgilerden oluşan bir harf seti. Save bastığında setler içerisindeki nokta ve çizgileri alıp bu son liste içerisinde o heceyi saklayacak
 const wordSets = [];          //hecelerden oluşan kelimeleri sakladığımız yer
+const sentenceSets = []
+
 const container = document.getElementById('container-image');
 
 var trashLine=[];
@@ -42,8 +44,10 @@ zoomOutButton.addEventListener("click", zoomOut);
 
 document.getElementById('nextButton').addEventListener('click', loadNextImage);
 document.getElementById('prevButton').addEventListener('click', loadPrevImage);
+
 document.getElementById('addSyllable').addEventListener('click', addSyllableCardToList);
 document.getElementById('addWordBtn').addEventListener('click', addWordCard);
+document.getElementById('addSentenceBtn').addEventListener('click', addCentenceCard)
 
 
 document.getElementById('addTriangleBtn').addEventListener('click', function () {
@@ -559,5 +563,63 @@ function deleteCardKelime(index) {
 
         // Listeyi güncelle
         addWordCard();
+    }
+}
+function addCentenceCard() {
+    const sentecesList = document.getElementById('sentencesList');
+    const cumleIsmi = document.getElementById('cumle_ismi').value;
+    if (wordSets.length > 0 && cumleIsmi != "") {
+        sentenceSets.push({ cumle: cumleIsmi, kelimeList: [...wordSets] });
+        wordSets.length = 0;
+        const wordList = document.getElementById('wordList');
+        wordList.innerHTML = '';
+        sentecesList.innerHTML = '';
+        sentenceSets.forEach(function (sentence, index) {
+            var card = document.createElement('li');
+            card.classList.add('sentencesCard');
+
+            const wordListItems = sentence.kelimeList.map((kelime, index) => `
+           <li><em>${index + 1}.Kelime</em>  <b>Kelime İsmi:</b> ${kelime.kelime}</li>
+             `).join();
+        card.innerHTML = `
+         <div class="card">
+             <div class="card-body">
+                <h6>Cumle: ${cumleIsmi}</h6>
+                 <ul> ${wordListItems} </ul>
+              <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCardCumle(${index})">Delete</button> 
+          </div>
+       </div>
+        `;
+            sentecesList.appendChild(card);
+            //input alanını temizleme
+            document.getElementById('cumle_ismi').value = ""
+        });
+    }
+}
+function deleteCardCumle(index){
+    if (index >= 0 && index < sentenceSets.length) {
+        const deletedItems = sentenceSets[index].kelimeList[0].heceList;
+        console.log(deletedItems)
+        // Silinecek noktaları ve çizgileri container üzerinden sil
+        deletedItems.forEach(item => {
+            item.forEach(deleteItem => {
+                if (deleteItem.hasOwnProperty('x') && deleteItem.hasOwnProperty('y')) {
+                    const pointElement = document.getElementById(deleteItem.id);
+                    if (pointElement) pointElement.remove(); // Noktayı container'dan sil 
+                }
+                else if (deleteItem.hasOwnProperty('startPoint') && deleteItem.hasOwnProperty('endPoint')) {
+                    const lineElement = document.getElementById(deleteItem.id);
+                    if (lineElement) lineElement.remove(); // Çizgiyi container'dan sil
+
+                }
+            })
+        });
+        // Kelime kartını listeden kaldır
+        sentenceSets.splice(index, 1);
+        const sentecesList = document.getElementById('sentencesList');
+        const cards = sentecesList.querySelectorAll('.sentencesCard');
+        if (cards[index]) cards[index].remove();
+        // Listeyi güncelle
+        addCentenceCard();
     }
 }
