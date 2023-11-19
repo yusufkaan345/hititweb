@@ -595,7 +595,7 @@ function addSentenceCard() {
     }
 }
 function deleteCardCumle(index){
-    if (index >= 0 && index < sentenceSets.length) {
+        console.log("tıklandı")
         const length=sentenceSets[index].kelimeList.length
         console.log(length)
         const deletedItems=[]
@@ -625,5 +625,5 @@ function deleteCardCumle(index){
         if (cards[index]) cards[index].remove();
         // Listeyi güncelle
         addSentenceCard();
-    }
+    
 }
