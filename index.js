@@ -567,7 +567,7 @@ function addSentenceCard() {
     const sentecesList = document.getElementById('sentencesList');
     const cumleIsmi = document.getElementById('cumle_ismi').value;
     if (wordSets.length > 0 && cumleIsmi != "") {
-        sentenceSets.push({ cumle: cumleIsmi, kelimeList: [...wordSets] });
+        sentenceSets.push({ cumleIsmi: cumleIsmi, kelimeList: [...wordSets] });
         wordSets.length = 0;
         const wordList = document.getElementById('wordList');
         wordList.innerHTML = '';
@@ -582,7 +582,7 @@ function addSentenceCard() {
         card.innerHTML = `
          <div class="card">
              <div class="card-body">
-                <h6>Cumle: ${cumleIsmi}</h6>
+                <h6>Cumle: ${sentence.cumleIsmi}</h6>
                  <ul> ${wordListItems} </ul>
               <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCardCumle(${index})">Delete</button> 
           </div>
@@ -596,23 +596,28 @@ function addSentenceCard() {
 }
 function deleteCardCumle(index){
     if (index >= 0 && index < sentenceSets.length) {
-        const kelimeList = sentenceSets[index].kelimeList;
-
-        // Tüm kelimeList öğelerini sil
-        kelimeList.forEach(kelimeSet => {
-            kelimeSet.heceList.forEach(heceList => {
-                heceList.forEach(item => {
-                    if (item.hasOwnProperty('x') && item.hasOwnProperty('y')) {
-                        const pointElement = document.getElementById(item.id);
-                        if (pointElement) pointElement.remove(); // Noktayı container'dan sil 
-                    } else if (item.hasOwnProperty('startPoint') && item.hasOwnProperty('endPoint')) {
-                        const lineElement = document.getElementById(item.id);
-                        if (lineElement) lineElement.remove(); // Çizgiyi container'dan sil
-                    }
-                });
+        const length=sentenceSets[index].kelimeList.length
+        console.log(length)
+        const deletedItems=[]
+        for(var i=0;i<length;i++){
+            sentenceSets[index].kelimeList[i].heceList.forEach(item=>{
+                deletedItems.push(item)
             });
-        });
+        }
+        console.log(deletedItems)
+        deletedItems.forEach(item => {
+            item.forEach(deleteItem => {
+                if (deleteItem.hasOwnProperty('x') && deleteItem.hasOwnProperty('y')) {
+                    const pointElement = document.getElementById(deleteItem.id);
+                    if (pointElement) pointElement.remove(); // Noktayı container'dan sil 
+                }
+                else if (deleteItem.hasOwnProperty('startPoint') && deleteItem.hasOwnProperty('endPoint')) {
+                    const lineElement = document.getElementById(deleteItem.id);
+                    if (lineElement) lineElement.remove(); // Çizgiyi container'dan sil
 
+                }
+            })
+        });
         // Kelime kartını listeden kaldır
         sentenceSets.splice(index, 1);
         const sentecesList = document.getElementById('sentencesList');
