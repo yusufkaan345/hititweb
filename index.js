@@ -47,7 +47,7 @@ document.getElementById('prevButton').addEventListener('click', loadPrevImage);
 
 document.getElementById('addSyllable').addEventListener('click', addSyllableCardToList);
 document.getElementById('addWordBtn').addEventListener('click', addWordCard);
-document.getElementById('addSentenceBtn').addEventListener('click', addCentenceCard)
+document.getElementById('addSentenceBtn').addEventListener('click', addSentenceCard)
 
 
 document.getElementById('addTriangleBtn').addEventListener('click', function () {
@@ -519,7 +519,6 @@ function addWordCard() {
                 </div>
             `;
             wordList.appendChild(card);
-                    console.log(wordSets)
 
             //input alanını temizleme
             document.getElementById('kelime_ismi').value = ""
@@ -530,7 +529,6 @@ function deleteCardKelime(index) {
     if (index >= 0 && index < wordSets.length) {
         
         const deletedItems = wordSets[index].heceList;
-       
         // Silinecek noktaları ve çizgileri container üzerinden sil
         deletedItems.forEach(item => {
 
@@ -565,7 +563,7 @@ function deleteCardKelime(index) {
         addWordCard();
     }
 }
-function addCentenceCard() {
+function addSentenceCard() {
     const sentecesList = document.getElementById('sentencesList');
     const cumleIsmi = document.getElementById('cumle_ismi').value;
     if (wordSets.length > 0 && cumleIsmi != "") {
@@ -598,28 +596,29 @@ function addCentenceCard() {
 }
 function deleteCardCumle(index){
     if (index >= 0 && index < sentenceSets.length) {
-        const deletedItems = sentenceSets[index].kelimeList[0].heceList;
-        console.log(deletedItems)
-        // Silinecek noktaları ve çizgileri container üzerinden sil
-        deletedItems.forEach(item => {
-            item.forEach(deleteItem => {
-                if (deleteItem.hasOwnProperty('x') && deleteItem.hasOwnProperty('y')) {
-                    const pointElement = document.getElementById(deleteItem.id);
-                    if (pointElement) pointElement.remove(); // Noktayı container'dan sil 
-                }
-                else if (deleteItem.hasOwnProperty('startPoint') && deleteItem.hasOwnProperty('endPoint')) {
-                    const lineElement = document.getElementById(deleteItem.id);
-                    if (lineElement) lineElement.remove(); // Çizgiyi container'dan sil
+        const kelimeList = sentenceSets[index].kelimeList;
 
-                }
-            })
+        // Tüm kelimeList öğelerini sil
+        kelimeList.forEach(kelimeSet => {
+            kelimeSet.heceList.forEach(heceList => {
+                heceList.forEach(item => {
+                    if (item.hasOwnProperty('x') && item.hasOwnProperty('y')) {
+                        const pointElement = document.getElementById(item.id);
+                        if (pointElement) pointElement.remove(); // Noktayı container'dan sil 
+                    } else if (item.hasOwnProperty('startPoint') && item.hasOwnProperty('endPoint')) {
+                        const lineElement = document.getElementById(item.id);
+                        if (lineElement) lineElement.remove(); // Çizgiyi container'dan sil
+                    }
+                });
+            });
         });
+
         // Kelime kartını listeden kaldır
         sentenceSets.splice(index, 1);
         const sentecesList = document.getElementById('sentencesList');
         const cards = sentecesList.querySelectorAll('.sentencesCard');
         if (cards[index]) cards[index].remove();
         // Listeyi güncelle
-        addCentenceCard();
+        addSentenceCard();
     }
 }
