@@ -1,15 +1,15 @@
 var addingTrianglePoint = false; // Üçgen eklemek için kullanılacak değişken
-var addingLinePoint = false;   // Çizgi eklemek için kullanıclacak değişken
+var addingLinePoint = false; // Çizgi eklemek için kullanıclacak değişken
 
 const pointTriangleList = []; // Üçgen nokta koordinatlarını saklamak için bir dizi
 const pointTriangleListTrash = [];
-const pointLineList = [];    // Çizgi nokta koordinatlarını saklamak için bir dizi
+const pointLineList = []; // Çizgi nokta koordinatlarını saklamak için bir dizi
 const pointLineListTrash = [];
 
 const pointTriangleSets = []; // Üçgen nokta kümelerini saklamak için bir dizi.Yani bir üçgen oluşturulduğunda dizi olarak tüm koordinatlar bunun içinde olacak 
-const pointLineSets = [];     // Çizgi nokta kümelerini saklamak için kullanılacak dizi
-const pointSets = [];         // Üçgen ve çizgilerden oluşan bir harf seti. Save bastığında setler içerisindeki nokta ve çizgileri alıp bu son liste içerisinde o heceyi saklayacak
-const wordSets = [];          //hecelerden oluşan kelimeleri sakladığımız yer
+const pointLineSets = []; // Çizgi nokta kümelerini saklamak için kullanılacak dizi
+const pointSets = []; // Üçgen ve çizgilerden oluşan bir harf seti. Save bastığında setler içerisindeki nokta ve çizgileri alıp bu son liste içerisinde o heceyi saklayacak
+const wordSets = []; //hecelerden oluşan kelimeleri sakladığımız yer
 const sentenceSets = []
 
 const container = document.getElementById('container-image');
@@ -33,12 +33,11 @@ var originalImageHeight = tablet.height;
 const initialImage = document.getElementById('tablet');
 tablet.src = 'img/tablet1.jpeg';
 
-const cancelButton = document.getElementById('cancelButton'); // Cancel işlemleri olacak 
+const cancelButton = document.getElementById('cancelButton'); 
 
 var zoomInButton = document.getElementById("zoomInButton");
 var zoomOutButton = document.getElementById("zoomOutButton");
 var zoomLevel = 1;
-
 zoomInButton.addEventListener("click", zoomIn);
 zoomOutButton.addEventListener("click", zoomOut);
 
@@ -167,27 +166,20 @@ container.addEventListener('click', function (event) {
     updateLabelPositions();
 });
 
+//dizilerdeki öğeleri siliyor her öğe için ilgili DOM öğesi alınıp (varsa) kaldırılıyor.
 cancelButton.addEventListener('click', function () {
-    for (const point of pointLineListTrash) {
-        const pointElement = document.getElementById(point.id);
-        if (pointElement) {
-            pointElement.remove(); // Noktayı container'dan sil
-        }
-    }
-    for (const line of lineList) {
-        const lineElement = document.getElementById(line.id);
-        if (lineElement) {
-            lineElement.remove(); // Çizgiyi container'dan sil
-        }
-    }
+    const removeElements = (elements) => {
+        elements.forEach(item => {
+            const element = document.getElementById(item.id);
+            if (element) {
+                element.remove();
+            }
+        });
+    };
 
-    // Silmek istediğiniz üçgen noktalarını ve çizgileri burada silin
-    for (const point of pointTriangleListTrash) {
-        const pointElement = document.getElementById(point.id);
-        if (pointElement) {
-            pointElement.remove(); // Noktayı container'dan sil
-        }
-    }
+    removeElements(pointLineListTrash);
+    removeElements(lineList);
+    removeElements(pointTriangleListTrash);
 
     // Silme işleminden sonra dizileri temizleyin
     lineList.length = 0;
@@ -201,40 +193,43 @@ cancelButton.addEventListener('click', function () {
 
 });
 
-function loadNextImage() {
-    currentImageIndex++;
+function changeImage(offset) {
+    currentImageIndex += offset;
     if (currentImageIndex > totalImages) {
         currentImageIndex = 1;
-    }
-    const image = document.getElementById('tablet');
-    image.src = `img/tablet${currentImageIndex}.jpeg`;
-}
-
-function loadPrevImage() {
-    currentImageIndex--;
-    if (currentImageIndex < 1) {
+    } else if (currentImageIndex < 1) {
         currentImageIndex = totalImages;
     }
     const image = document.getElementById('tablet');
     image.src = `img/tablet${currentImageIndex}.jpeg`;
 }
 
-function zoomIn() {
-    zoomLevel += 0.1;
-    tablet.style.transform = `scale(${zoomLevel})`;
-    updateLabelPositions();
-    updateOriginalCoordinates();
+function loadNextImage() {
+    changeImage(1);
 }
 
-function zoomOut() {
-    if (zoomLevel > 0.2) {
-        zoomLevel -= 0.1;
+function loadPrevImage() {
+    changeImage(-1);
+}
+
+function changeZoom(zoomIncrement) {
+    if ((zoomIncrement > 0 && zoomLevel < 2) || (zoomIncrement < 0 && zoomLevel > 0.2)) {
+        zoomLevel += zoomIncrement;
         tablet.style.transform = `scale(${zoomLevel})`;
         updateLabelPositions();
         updateOriginalCoordinates();
     }
 }
 
+function zoomIn() {
+    changeZoom(0.1);
+}
+
+function zoomOut() {
+    changeZoom(-0.1);
+}
+
+//TO-DO: fonksiyona gerek var mı kontrol etmek gerekiyor - updateLabelPositions() yüzünden çakışma var mı gibisinden
 function updateOriginalCoordinates() {
     const points = document.querySelectorAll('.point');
     points.forEach(function (point) {
@@ -245,42 +240,50 @@ function updateOriginalCoordinates() {
     });
 }
 
+// Elementlerin konumunu günceller ve bu güncellemeyi etiket pozisyonlarıyla ve satır pozisyonlarıyla birlikte çağırır.
 function updateLabelPositions() {
-    const points = document.querySelectorAll('.point');
-    points.forEach(function (point) {
-        const originalX = parseFloat(point.dataset.originalX);
-        const originalY = parseFloat(point.dataset.originalY);
+    updateElementPositions('.point'); // Belirli bir seçiciye göre elementlerin pozisyonunu günceller
+    updateLinePositions(); // Satır pozisyonlarını günceller
+}
+function updateElementPositions(selector) {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach(function (element) {
+        // Seçiciye göre elementleri alır ve her birinin pozisyonunu günceller
+        const originalX = parseFloat(element.dataset.originalX);
+        const originalY = parseFloat(element.dataset.originalY);
         const newX = originalX * zoomLevel;
         const newY = originalY * zoomLevel;
-        point.style.left = newX + 'px';
-        point.style.top = newY + 'px';
+        element.style.left = newX + 'px';
+        element.style.top = newY + 'px';
     });
-    updateLinePositions();
-
 }
 
+// Satır pozisyonlarını günceller
 function updateLinePositions() {
+    // Satır elementlerini alır ve her birinin pozisyonunu günceller
     const lines = document.querySelectorAll('.line');
     lines.forEach(function (line) {
-        const startId = line.dataset.startPoint;
-        const endId = line.dataset.endPoint;
-        const start = document.getElementById(startId);
-        const end = document.getElementById(endId);
-
-        const x1 = parseFloat(start.dataset.originalX) * zoomLevel;
-        const y1 = parseFloat(start.dataset.originalY) * zoomLevel;
-        const x2 = parseFloat(end.dataset.originalX) * zoomLevel;
-        const y2 = parseFloat(end.dataset.originalY) * zoomLevel;
-
-        line.style.left = (x1 + 2.4) + 'px';
-        line.style.top = (y1 + 2.4) + 'px';
-
-        line.style.width = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)) + 'px';
-        line.style.transformOrigin = '0 0';
-        line.style.transform = 'rotate(' + Math.atan2(y2 - y1, x2 - x1) + 'rad)';
+        const [x1, y1, x2, y2] = getLineCoordinates(line);
+        setPositionAndTransform(line, x1, y1, x2, y2); // Satırın pozisyonunu ayarlar ve döndürür
     });
 }
 
+// Verilen bir satırın başlangıç ve bitiş noktalarını alır ve onların koordinatlarını döndürür
+function getLineCoordinates(line) {
+    // Satırın başlangıç ve bitiş noktalarının id'lerini alır
+    const startId = line.dataset.startPoint;
+    const endId = line.dataset.endPoint;
+    const start = document.getElementById(startId);
+    const end = document.getElementById(endId);
+
+    // Başlangıç ve bitiş noktalarının koordinatlarını hesaplar ve zoom seviyesine göre yeniden hesaplar
+    const [x1, y1] = [parseFloat(start.dataset.originalX) * zoomLevel, parseFloat(start.dataset.originalY) * zoomLevel];
+    const [x2, y2] = [parseFloat(end.dataset.originalX) * zoomLevel, parseFloat(end.dataset.originalY) * zoomLevel];
+
+    return [x1, y1, x2, y2];
+}
+
+// İki nokta arasında bir çizgi oluşturur
 function drawLine(point1, point2) {
     const line = document.createElement("div");
     line.className = 'line'
@@ -291,32 +294,43 @@ function drawLine(point1, point2) {
     line.dataset.startPoint = point1.id;
     line.dataset.endPoint = point2.id;
 
-    line.style.position = "absolute";
-    line.style.border = "0.2px solid white";
-    line.style.backgroundColor = "white";
-    line.style.width = "0.2px";
-    line.style.height = "0.2px";
+    line.style.cssText = `
+    position: absolute;
+    border: 0.2px solid white;
+    background-color: white;
+    width: 0.2px;
+    height: 0.2px;
+    `;
 
-    // Çizgiyi point1'den point2'ye taşı 
-    const x1 = parseFloat(point1.dataset.originalX);
-    const y1 = parseFloat(point1.dataset.originalY);
-    const x2 = parseFloat(point2.dataset.originalX);
-    const y2 = parseFloat(point2.dataset.originalY);
+    const [x1, y1] = [parseFloat(point1.dataset.originalX), parseFloat(point1.dataset.originalY)];
+    const [x2, y2] = [parseFloat(point2.dataset.originalX), parseFloat(point2.dataset.originalY)];
 
-    line.style.left = (x1 + 2.4) + 'px'; // Başlangıç noktasını point1'in x koordinatına ayarla
-    line.style.top = (y1 + 2.4) + 'px'; // Başlangıç noktasını point1'in y koordinatına ayarla
+    setPositionAndTransform(line, x1, y1, x2, y2);
 
-    // Rotasyon ve uzunluk. Burayı chat gpt yaptı :D 
-    line.style.width = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)) + 'px';
-    line.style.transformOrigin = '0 0';
-    line.style.transform = 'rotate(' + Math.atan2(y2 - y1, x2 - x1) + 'rad)';
-
-    const lineId = line.id; //bu line unique id ata
+    const lineId = line.id;
     const startId = point1.id;
     const endId = point2.id;
     lineList.push({ id: lineId, startPoint: startId, endPoint: endId });
 
     container.appendChild(line);
+}
+
+// İki nokta arasında bir çizginin konumunu ve dönüşümünü ayarlar
+function setPositionAndTransform(line, x1, y1, x2, y2) {
+    line.style.left = (x1 + 2.4) + 'px';
+    line.style.top = (y1 + 2.4) + 'px';
+    
+    const [width, rotation] = calculateWidthAndRotation(x1, y1, x2, y2);
+    
+    line.style.width = width + 'px';
+    line.style.transformOrigin = '0 0';
+    line.style.transform = 'rotate(' + rotation + 'rad)';
+}
+
+function calculateWidthAndRotation(x1, y1, x2, y2) {
+    const width = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    const rotation = Math.atan2(y2 - y1, x2 - x1);
+    return [width, rotation];
 }
 
 function getSelectedRadioValue(name) {
@@ -351,80 +365,67 @@ function deleteCard(index) {
     pointSets.splice(index, 1);
 
     // Listeyi güncelle
-    updatesyllableList();
+    updateSyllableList();
 }
+
+function removeFromTrash(point, trash) {
+    const index = trash.findIndex(item => item.id === point.id);
+    if (index !== -1) {
+        trash.splice(index, 1); // Noktayı trash'ten kaldır
+    }
+}
+
 function addSyllableCardToList() {
-    lineList.forEach(item=>{
-        trashLine.forEach(item2=>{
-            if(item.startPoint==item2){
-               const lineElement=document.getElementById(item.id)
-               if(lineElement){
-                lineElement.remove();
-               }
-            }
-        })
-       
-    })
-    pointLineList.forEach(item =>{
+     // Çöp kutusundaki çizgileri ve noktaları kaldırır
+    lineList.forEach(line => {
+        if (trashLine.includes(line.startPoint)) {
+            const lineElement = document.getElementById(line.id);
+            if (lineElement) lineElement.remove();
+        }
+    });
+
+    pointLineList.concat(pointTriangleList).forEach(item => {
         const pointElement = document.getElementById(item.id);
-            if (pointElement) {
-                pointElement.remove(); // Noktayı container'dan sil
-            }
-    })
-    pointTriangleList.forEach(item =>{
-        const pointElement = document.getElementById(item.id);
-            if (pointElement) {
-                pointElement.remove(); // Noktayı container'dan sil
-            }
-    })  
-    
+        if (pointElement) pointElement.remove();
+    });    
          
     pointLineList.length = 0
     pointTriangleList.length = 0;
 
+     // Gerekli değerlerin kontrolünü yapar ve eksikse uyarı verir
     var heceIsmi = document.getElementById('hece_ismi').value;
     var selectedRadioValue = getSelectedRadioValue('uygarlik');
-    if (heceIsmi == "" || selectedRadioValue == "") {
-        alert("Hece ismi ve uygarlik seçilmeli")
+    if (!heceIsmi || !selectedRadioValue) {
+        alert("Hece ismi ve uygarlik seçilmeli");
+        return;
     }
     if( (pointTriangleSets.length <= 0 && pointLineSets.length <= 0)){
-        alert("Yeni bir Üçgen veya Çizgi eklenmedi ")
+        alert("Yeni bir Üçgen veya Çizgi eklenemedi ")
     }
     else if (heceIsmi != "" && selectedRadioValue != "" && (pointTriangleSets.length > 0 || pointLineSets.length > 0)) {
-        var syllableList = [];
+        const syllableList = new Set();
 
-        for (const triangleSet of pointTriangleSets) {
-            for (const point of triangleSet) {
-                if (!syllableList.some(item => item.x === point.x && item.y === point.y && item.id === point.id)) {
-                    syllableList.push({ id: point.id, x: point.x, y: point.y });
-                    removeFromTrash(point, pointTriangleListTrash); // Noktayı trash'ten kaldır
-
+        // Nokta listelerini birleştirir ve tekrar edenleri kaldırır
+        pointTriangleSets.concat(pointLineSets).forEach(set => {
+            set.forEach(point => {
+                if (!syllableList.has(JSON.stringify(point))) {
+                    syllableList.add(JSON.stringify(point));
+                    removeFromTrash(point, point === pointLineSets ? pointLineListTrash : pointTriangleListTrash);
                 }
-            }
-        }
+            });
+        });
 
-        for (const lineSet of pointLineSets) {
-            for (const point of lineSet) {
-                if (!syllableList.some(item => item.x === point.x && item.y === point.y && item.id === point.id)) {
-                    syllableList.push({ id: point.id, x: point.x, y: point.y });
-                    removeFromTrash(point, pointLineListTrash); // Noktayı trash'ten kaldır
+        // Process lineList
+        lineList.forEach(line => syllableList.add(JSON.stringify(line)));
 
-                }
-            }
-        }
-        for (const line of lineList) {
-            syllableList.push(line)
-        }
+        const heceName = { heceIsmi };
+        const selectedValue = { selectedRadioValue };
+        syllableList.add(JSON.stringify(heceName));
+        syllableList.add(JSON.stringify(selectedValue));
 
-        const heceName = {
-            heceismi: heceIsmi, // Anahtar: Değer
-        };
-        const selectedValue = {
-            selectedRadioValue: selectedRadioValue, // Anahtar: Değer
-        };
-        syllableList.push(heceName);
-        syllableList.push(selectedValue);
-        pointSets.push(syllableList)
+        // SyllableList'teki değerleri pointSets'e ekler - point, heceName, selectedValue
+        pointSets.push([...syllableList].map(item => JSON.parse(item)));
+
         pointTriangleSets.length = 0;
         pointLineSets.length = 0;
 
@@ -436,45 +437,36 @@ function addSyllableCardToList() {
         lineList.length = 0;
 
 
-        updatesyllableList(); // Koordinat listesini güncelle
+        updateSyllableList(); // Hece listesini günceller
 
-        //listeyi temizle radio button unchecked yap
+        // Gerekli alanları temizler ve radyo düğmesini işaretlenmemiş yapar
         document.getElementById('hece_ismi').value = ""
         var radioButtons = document.getElementsByName("uygarlik");
         for (var i = 0; i < radioButtons.length; i++) {
             radioButtons[i].checked = false;
         }
-
-
-    }
-
-
-}
-function removeFromTrash(point, trash) {
-    const index = trash.findIndex(item => item.id === point.id);
-    if (index !== -1) {
-        trash.splice(index, 1); // Noktayı trash'ten kaldır
     }
 }
-function updatesyllableList() {
+
+function updateSyllableList() {
     const syllableList = document.getElementById('syllableList');
     syllableList.innerHTML = ''; // Önce mevcut listeyi temizle
 
-    pointSets.forEach(function (pointSet, index) {
-
+    // Her bir pointSet için hece ismini ve seçilen radyo değerini filtreler ve alır
+    pointSets.forEach((pointSet, index) => {
         const filteredPointSet = pointSet.filter(point => point.hasOwnProperty('x') && point.hasOwnProperty('y'));
-        const heceIsmi = pointSet.find(point => point.hasOwnProperty('heceismi'))?.heceismi || "";
-        const selectedRadioValue = pointSet.find(point => point.hasOwnProperty('selectedRadioValue'))?.selectedRadioValue || "";
+        const heceIsmi = pointSet.find(point => point.hasOwnProperty('heceismi'))?.heceismi || '';
+        const selectedRadioValue = pointSet.find(point => point.hasOwnProperty('selectedRadioValue'))?.selectedRadioValue || '';
 
+        // Eğer filtrelenmiş nokta seti boş değilse, yeni bir kart oluşturur ve listeye ekler
         if (filteredPointSet.length > 0) {
-
             const card = document.createElement('li');
             card.innerHTML = `
-                <div class="card mr-3"  style="width:175px; height:100px;  " >
-                        <h6 style="font-size:12px;">Hece Seti ${index + 1}</h6>
-                        <div style="font-size:12px;">Hece İsmi : ${heceIsmi}</div>
-                        <div style="font-size:12px;"> Dil : ${selectedRadioValue}</div>
-                        <button class="btn-danger"  style="width:50px; height:20px; font-size:10px" onclick="deleteCard(${index})">Delete</button> 
+                <div class="card mr-3" style="width:175px; height:100px;">
+                    <h6 style="font-size:12px;">Hece Seti ${index + 1}</h6>
+                    <div style="font-size:12px;">Hece İsmi: ${heceIsmi}</div>
+                    <div style="font-size:12px;">Dil: ${selectedRadioValue}</div>
+                    <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCard(${index})">Delete</button> 
                 </div>
             `;
             syllableList.appendChild(card);
@@ -487,8 +479,10 @@ function addWordCard() {
     const kelimeIsmi = document.getElementById('kelime_ismi').value;
   
     if (pointSets.length > 0 && kelimeIsmi != "") {
+
         // PointSets'teki tüm hece listelerini tek bir liste öğesi olarak wordSets'e ekle
         wordSets.push({ kelime: kelimeIsmi, heceList: [...pointSets] });
+        
         // PointSets'i temizle
         pointSets.length = 0;
 
@@ -499,131 +493,139 @@ function addWordCard() {
         // Kelime kartlarını oluştur ve listeye ekle
         wordList.innerHTML = ''; // Önce mevcut kelime kartlarını temizle
 
-        wordSets.forEach(function (word, index) {
-            var card = document.createElement('li');
+        wordSets.forEach((word, index) => {
+            const card = document.createElement('li');
             card.classList.add('wordCard');
-            const heceListItems = word.heceList.map((hece, heceIndex) => `
-            
-                <li>Hece ${heceIndex + 1}: Hece İsmi: ${hece[hece.length - 2].heceismi}, Dil: ${hece[hece.length - 1].selectedRadioValue}</li>
-            `).join('');
 
+            // Kelimeye ait hece listesini oluşturur
+            const heceListItems = word.heceList
+                .map((hece, heceIndex) => `<li>Hece ${heceIndex + 1}: Hece İsmi: ${hece[hece.length - 2].heceismi}, Dil: ${hece[hece.length - 1].selectedRadioValue}</li>`)
+                .join('');
+
+            // Oluşturulan kartın içeriğini hazırlar ve listeye ekler
             card.innerHTML = `
                 <div class="card">
                     <div class="card-body">
                         <h6>Kelime: ${word.kelime}</h6>
-                        <ul>
-                            ${heceListItems}
-                        </ul>
+                        <ul>${heceListItems}</ul>
                         <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCardKelime(${index})">Delete</button> 
                     </div>
                 </div>
             `;
             wordList.appendChild(card);
-
-            //input alanını temizleme
-            document.getElementById('kelime_ismi').value = ""
-        });
-    }
-}
-function deleteCardKelime(index) {
-    if (index >= 0 && index < wordSets.length) {
-        
-        const deletedItems = wordSets[index].heceList;
-        // Silinecek noktaları ve çizgileri container üzerinden sil
-        deletedItems.forEach(item => {
-
-            item.forEach(deleteItem => {
-                if (deleteItem.hasOwnProperty('x') && deleteItem.hasOwnProperty('y')) {
-                    const pointElement = document.getElementById(deleteItem.id);
-
-                    if (pointElement) {
-                        pointElement.remove(); // Noktayı container'dan sil
-                    }
-                } else if (deleteItem.hasOwnProperty('startPoint') && deleteItem.hasOwnProperty('endPoint')) {
-                    const lineElement = document.getElementById(deleteItem.id);
-                    if (lineElement) {
-                        lineElement.remove(); // Çizgiyi container'dan sil
-                    }
-                }
-            })
-
         });
 
-        // Kelime kartını listeden kaldır
-        wordSets.splice(index, 1);        
-
-        const wordList = document.getElementById('wordList');
-        const cards = wordList.querySelectorAll('.wordCard');
-       
-        if (cards[index]) {
-            cards[index].remove();
-        }
-
-        // Listeyi güncelle
-        addWordCard();
+        // Kelime giriş alanını temizler
+        document.getElementById('kelime_ismi').value = "";
     }
 }
+
 function addSentenceCard() {
-    const sentecesList = document.getElementById('sentencesList');
+    const sentencesList = document.getElementById('sentencesList');
     const cumleIsmi = document.getElementById('cumle_ismi').value;
+
+    // Eğer wordSets dizisi doluysa ve cümle ismi boş değilse devam et
     if (wordSets.length > 0 && cumleIsmi != "") {
+
+         // Yeni bir cümle seti oluşturup wordSets'teki kelime listesini kopyala
         sentenceSets.push({ cumleIsmi: cumleIsmi, kelimeList: [...wordSets] });
         wordSets.length = 0;
+
         const wordList = document.getElementById('wordList');
         wordList.innerHTML = '';
-        sentecesList.innerHTML = '';
-        sentenceSets.forEach(function (sentence, index) {
+        sentencesList.innerHTML = '';
+
+        // Her bir cümle seti için bir kart oluştur ve listeye ekle
+        sentenceSets.forEach((sentence, index) => {
             var card = document.createElement('li');
             card.classList.add('sentencesCard');
 
-            const wordListItems = sentence.kelimeList.map((kelime, index) => `
-           <li><em>${index + 1}.Kelime</em>  <b>Kelime İsmi:</b> ${kelime.kelime}</li>
-             `).join();
-        card.innerHTML = `
-         <div class="card">
-             <div class="card-body">
-                <h6>Cumle: ${sentence.cumleIsmi}</h6>
-                 <ul> ${wordListItems} </ul>
-              <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCardCumle(${index})">Delete</button> 
-          </div>
-       </div>
-        `;
-            sentecesList.appendChild(card);
-            //input alanını temizleme
-            document.getElementById('cumle_ismi').value = ""
+            // Kelime listesini kart içeriği olarak oluştur
+            const wordListItems = sentence.kelimeList
+                .map(kelime => `<li><em>${kelime.kelime}</em></li>`)
+                .join('');
+
+                card.innerHTML = `
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Cumle: ${sentence.cumleIsmi}</h6>
+                        <ul>${wordListItems}</ul>
+                        <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCardCumle(${index})">Delete</button>
+                    </div>
+                </div>
+            `;
+            sentencesList.appendChild(card);
         });
+        // Input alanını temizleme
+        document.getElementById('cumle_ismi').value = "";
     }
 }
-function deleteCardCumle(index){
-        console.log("tıklandı")
-        const length=sentenceSets[index].kelimeList.length
-        console.log(length)
-        const deletedItems=[]
-        for(var i=0;i<length;i++){
-            sentenceSets[index].kelimeList[i].heceList.forEach(item=>{
-                deletedItems.push(item)
-            });
-        }
-        console.log(deletedItems)
+
+function deleteCardKelime(index) {
+    // Eğer verilen index wordSets dizisinin geçerli bir indeksi ise devam et
+    if (index >= 0 && index < wordSets.length) {
+
+        // Silinecek öğeleri belirtmek için silinecek öğelerin listesini al
+        const deletedItems = wordSets[index].heceList;
+
+        // Her bir öğe için döngü oluştur ve bunları listeden kaldır
         deletedItems.forEach(item => {
             item.forEach(deleteItem => {
-                if (deleteItem.hasOwnProperty('x') && deleteItem.hasOwnProperty('y')) {
-                    const pointElement = document.getElementById(deleteItem.id);
-                    if (pointElement) pointElement.remove(); // Noktayı container'dan sil 
-                }
-                else if (deleteItem.hasOwnProperty('startPoint') && deleteItem.hasOwnProperty('endPoint')) {
-                    const lineElement = document.getElementById(deleteItem.id);
-                    if (lineElement) lineElement.remove(); // Çizgiyi container'dan sil
+                // Silinecek öğelerin her birini bul ve sil
+                const element = deleteItem.hasOwnProperty('x') && deleteItem.hasOwnProperty('y')
+                    ? document.getElementById(deleteItem.id)
+                    : document.getElementById(deleteItem.id);
 
+                if (element) {
+                    element.remove();
                 }
-            })
+            });
         });
-        // Kelime kartını listeden kaldır
-        sentenceSets.splice(index, 1);
-        const sentecesList = document.getElementById('sentencesList');
-        const cards = sentecesList.querySelectorAll('.sentencesCard');
-        if (cards[index]) cards[index].remove();
-        // Listeyi güncelle
-        addSentenceCard();
-    
+
+        // Verilen index'teki öğeyi wordSets dizisinden kaldır
+        wordSets.splice(index, 1);
+
+         // Silinen kartı görsel olarak da kaldır
+        const card = document.getElementById('wordList').querySelectorAll('.wordCard')[index];
+        if (card) {
+            card.remove(); // Kartı sil
+        }
+
+        addWordCard(); // Kelime kartlarını güncelle
+    }
+}
+
+function deleteCardCumle(index){
+    // Silinecek öğeleri toplamak için boş bir dizi oluştur
+    const deletedItems = [];
+
+    // Verilen indeksteki cümle kartının içindeki kelime listesinde dolaş ve hece listelerini deletedItems dizisine ekle
+    sentenceSets[index].kelimeList.forEach(item => {
+        item.heceList.forEach(subItem => {
+            deletedItems.push(subItem);
+        });
+    });
+
+    // Her bir silinecek öğe için döngü oluştur ve onları listeden kaldır
+    deletedItems.forEach(item => {
+        item.forEach(deleteItem => {
+            const element = deleteItem.hasOwnProperty('x') && deleteItem.hasOwnProperty('y')
+                ? document.getElementById(deleteItem.id)
+                : document.getElementById(deleteItem.id);
+
+            if (element) {
+                element.remove();
+            }
+        });
+    });
+
+    sentenceSets.splice(index, 1);
+    const sentencesList = document.getElementById('sentencesList');
+    const card = sentencesList.querySelectorAll('.sentencesCard')[index];
+
+    if (card) {
+        card.remove();
+    }
+
+    addSentenceCard();
 }
