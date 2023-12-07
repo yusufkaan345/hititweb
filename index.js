@@ -44,10 +44,14 @@ zoomOutButton.addEventListener("click", zoomOut);
 document.getElementById('nextButton').addEventListener('click', loadNextImage);
 document.getElementById('prevButton').addEventListener('click', loadPrevImage);
 
+var specialChars = document.querySelectorAll('.accent-cell');
+specialChars.forEach(function(char) {
+    char.addEventListener('click', specialCharCase);
+});
+
 document.getElementById('addSyllable').addEventListener('click', addSyllableCardToList);
 document.getElementById('addWordBtn').addEventListener('click', addWordCard);
 document.getElementById('addSentenceBtn').addEventListener('click', addSentenceCard)
-
 
 document.getElementById('addTriangleBtn').addEventListener('click', function () {
     addingTrianglePoint = true; // add triangle butonuna tıklandığında eklemeye başlayın
@@ -333,6 +337,12 @@ function calculateWidthAndRotation(x1, y1, x2, y2) {
     return [width, rotation];
 }
 
+function specialCharCase(event) {
+    var clickedChar = event.target.innerText;
+    var heceIsmi = document.getElementById('hece_ismi');
+    heceIsmi.value += clickedChar;
+}
+
 function getSelectedRadioValue(name) {
     const radioButtons = document.getElementsByName(name);
     for (const radioButton of radioButtons) {
@@ -341,31 +351,6 @@ function getSelectedRadioValue(name) {
         }
     }
     return "";
-}
-
-function deleteCard(index) {
-    const deletedItems = pointSets[index];
-
-    // Silinecek noktaları ve çizgileri container üzerinden sil
-    deletedItems.forEach(item => {
-        if (item.hasOwnProperty('x') && item.hasOwnProperty('y')) {
-            const pointElement = document.getElementById(item.id);
-            if (pointElement) {
-                pointElement.remove(); // Noktayı containerdan sil
-            }
-        } else if (item.hasOwnProperty('startPoint') && item.hasOwnProperty('endPoint')) {
-            const lineElement = document.getElementById(item.id);
-            if (lineElement) {
-                lineElement.remove(); // Çizgiyi containerdan sil
-            }
-        }
-    });
-
-    // Belirli bir "card" ı listeden kaldır
-    pointSets.splice(index, 1);
-
-    // Listeyi güncelle
-    updateSyllableList();
 }
 
 function removeFromTrash(point, trash) {
@@ -559,6 +544,31 @@ function addSentenceCard() {
         // Input alanını temizleme
         document.getElementById('cumle_ismi').value = "";
     }
+}
+
+function deleteCard(index) {
+    const deletedItems = pointSets[index];
+
+    // Silinecek noktaları ve çizgileri container üzerinden sil
+    deletedItems.forEach(item => {
+        if (item.hasOwnProperty('x') && item.hasOwnProperty('y')) {
+            const pointElement = document.getElementById(item.id);
+            if (pointElement) {
+                pointElement.remove(); // Noktayı containerdan sil
+            }
+        } else if (item.hasOwnProperty('startPoint') && item.hasOwnProperty('endPoint')) {
+            const lineElement = document.getElementById(item.id);
+            if (lineElement) {
+                lineElement.remove(); // Çizgiyi containerdan sil
+            }
+        }
+    });
+
+    // Belirli bir "card" ı listeden kaldır
+    pointSets.splice(index, 1);
+
+    // Listeyi güncelle
+    updateSyllableList();
 }
 
 function deleteCardKelime(index) {
