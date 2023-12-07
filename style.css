@@ -58,5 +58,13 @@
     max-height: 300px; /* Belirli bir maksimum yükseklik ayarlayın */
     max-width: 300px;
     overflow-x: scroll; /* Dikey kaydırma çubuğunu etkinleştir */
-
+}
+.accent-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.accent-cell {
+    border: 1px solid #000;
+    padding: 8px;
+    cursor: pointer;
 }
