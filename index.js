@@ -52,6 +52,8 @@ specialChars.forEach(function(char) {
 document.getElementById('addSyllable').addEventListener('click', addSyllableCardToList);
 document.getElementById('addWordBtn').addEventListener('click', addWordCard);
 document.getElementById('addSentenceBtn').addEventListener('click', addSentenceCard)
+document.getElementById('saveBtn').addEventListener('click', saveTransactions)
+
 
 document.getElementById('addTriangleBtn').addEventListener('click', function () {
     addingTrianglePoint = true; // add triangle butonuna tıklandığında eklemeye başlayın
@@ -196,7 +198,16 @@ cancelButton.addEventListener('click', function () {
     addingTrianglePoint = false;
 
 });
-
+function saveTransactions(){
+    if(sentenceSets.length==0){
+        console.log("boş bu liste")
+        
+    }
+    else{
+        var jsonString = JSON.stringify(sentenceSets);
+        console.log(jsonString);
+    }
+}
 function changeImage(offset) {
     currentImageIndex += offset;
     if (currentImageIndex > totalImages) {
