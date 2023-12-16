@@ -76,16 +76,7 @@ addButtonEventListener('addTriangleBtn', 'isAddTriangle');
 addButtonEventListener('addLineBtn', 'isAddLine');
 addButtonEventListener('add-4', 'isAdd4');
 addButtonEventListener('add-5', 'isAdd5');
-function updateLines(dot) {
-    var lines=[]
-    lineList.forEach(item=>{
-        if(item.endPoint == dot.id || item.startPoint==dot.id){
-            lines.push(document.getElementById(item.id))
-        }
-    })
-    console.log(lines)
- 
-}
+
 function addDot(x, y) {
 
     var point = document.createElement('div');
@@ -99,34 +90,79 @@ function addDot(x, y) {
     pointTempleList.push(point)
     container.appendChild(point);
 }
+
 var isMouseDown = false;
+// Click event to move the selected point
 container.addEventListener('mousemove', function (event) {
-    if (isMouseDown && selectedDot) {
-        var originalX = parseFloat(selectedDot.dataset.originalX);
-        var originalY = parseFloat(selectedDot.dataset.originalY);
+    if (selectedDot && isMouseDown) {
+        const containerRect = container.getBoundingClientRect();
+        const scrolledX = event.clientX - containerRect.left + container.scrollLeft;
+        const scrolledY = event.clientY - containerRect.top + container.scrollTop;
 
-        // Fare konumunu al
-        var x = event.clientX - container.getBoundingClientRect().left;
-        var y = event.clientY - container.getBoundingClientRect().top;
+        // Calculate new original coordinates for the selected point
+        const newOriginalX = scrolledX / zoomLevel;
+        const newOriginalY = scrolledY / zoomLevel;
 
-        // Ekranın o anki scroll durumunu ekle
-        x += container.scrollLeft;
-        y += container.scrollTop;
+        // Update the dataset values for the selectedDot
+        selectedDot.dataset.originalX = newOriginalX;
+        selectedDot.dataset.originalY = newOriginalY;
 
-        // Yeni konumu hesapla ve stile uygula
-        var newX = originalX + (x - originalX);
-        var newY = originalY + (y - originalY);
-
-        selectedDot.style.left = newX + 'px';
-        selectedDot.style.top = newY + 'px';
+        // Update the visual position of the selectedDot
+        selectedDot.style.left = scrolledX + 'px';
+        selectedDot.style.top = scrolledY + 'px';
         updateLines(selectedDot);
+
+       
     }
 });
 
-document.addEventListener('mousedown', function (event) { isMouseDown = true; });
+document.addEventListener('mousedown', function (event) {
+    isMouseDown = true;
+});
 
-document.addEventListener('mouseup', function (event) {  isMouseDown = false;});
+document.addEventListener('mouseup', function (event) {
+    isMouseDown = false;
+    selectedDot.style.backgroundColor=''
+    selectedDot=null
+});
+function updateLines(dot) {
+     // Silinecek çizgileri tutan bir dizi
+     var linesToRemove = [];
+     var linesToRedraw=[]
+     // selectedDot ile bağlantılı çizgileri bul
+     lineList.forEach(item => {
+        if (item.endPoint === dot.id || item.startPoint === dot.id) {
+            // Eğer çizgi daha önce eklenmediyse, ekleyin
+            const existingLineIndex = linesToRedraw.findIndex(line => 
+                (line.start === item.startPoint && line.end === item.endPoint) ||
+                (line.start === item.endPoint && line.end === item.startPoint)
+            );
+            if (existingLineIndex === -1) {
+                linesToRedraw.push({ start: item.startPoint, end: item.endPoint });
+            }
+            linesToRemove.push(item.id); // Çizgiyi silmek için ID'yi ekleyin
+        }
+    });
 
+     // Her bir çizgiyi silelim
+     linesToRemove.forEach(lineId => {
+         const lineElement = document.getElementById(lineId);
+         console.log(lineElement)
+         if (lineElement) {
+             lineElement.remove();
+             console.log("sildi")
+         }
+     });
+     // Yeni koordinatlarla çizgileri çiz
+     linesToRedraw.forEach(item => {
+        const startDotId = item.start;
+        const endDotId = item.end;
+        drawLine(document.getElementById(startDotId), document.getElementById(endDotId)); // Çizgiyi çiz
+        console.log("çizdi")
+    });
+       // linesToRedraw dizisini sıfırlayalım
+       
+}
 container.addEventListener('click', function (event) {
     const containerRect = container.getBoundingClientRect();
     const scrolledX = event.clientX - containerRect.left + container.scrollLeft;
@@ -206,37 +242,6 @@ container.addEventListener('click', function (event) {
 
         point.dataset.originalX = (scrolledX) / zoomLevel;
         point.dataset.originalY = (scrolledY) / zoomLevel;
-        
-
-        // Çizginin eklenen noktası üçgenin hangi noktasına yakın for ile kontrol et
-        if (pointLineList.length === 0) {
-            let closestTrianglePoint = null; // En yakın üçgen noktasını saklamak için değişken
-            let minDistance = Number.MAX_VALUE; // En küçük mesafeyi saklamak için değişken
-            
-            for (const triangleSet of pointTriangleSets) {
-                for (const trianglePoint of triangleSet) {
-                    if (!trianglePoint.connected) {
-                        const distance = Math.sqrt(
-                            Math.pow(parseFloat(point.dataset.originalX) - parseFloat(trianglePoint.x), 2) +
-                            Math.pow(parseFloat(point.dataset.originalY) - parseFloat(trianglePoint.y), 2)
-                        );
-
-                        if (distance < minDistance) {
-                            minDistance = distance;
-                            closestTrianglePoint = trianglePoint;
-                        }
-                    }
-                }
-            }
-
-            if (closestTrianglePoint) {
-                point.dataset.originalX = closestTrianglePoint.x;
-                point.dataset.originalY = closestTrianglePoint.y;
-                point.style.backgroundColor = 'red';
-                closestTrianglePoint.connected = true; // Bağlantıyı işaretle
-            }
-            
-        }
 
         pointLineList.push({ id: pointId, x: point.dataset.originalX, y: point.dataset.originalY });
         container.appendChild(point);
