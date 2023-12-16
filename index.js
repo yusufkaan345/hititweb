@@ -47,25 +47,6 @@ var zoomOutButton = document.getElementById("zoomOutButton");
 var zoomLevel = 1;
 
 var selectedDot = null; // Seçilen noktanın referansını tutacak değişken
-// Add event listener to each point for selection
-const points = document.querySelectorAll('.point');
-points.forEach(point => {
-    point.addEventListener('click', function(event) {
-        if (selectedDot === point) {
-            // If the clicked point is already selected, deselect it
-            selectedDot.style.backgroundColor = '';
-            selectedDot = null;
-        } else {
-            // Otherwise, select the clicked point
-            if (selectedDot) {
-                selectedDot.style.backgroundColor = '';
-            }
-            selectedDot = point;
-            selectedDot.style.backgroundColor = '#c44dff';
-        }
-    });
-});
-
 
 zoomInButton.addEventListener("click", zoomIn);
 zoomOutButton.addEventListener("click", zoomOut);
@@ -109,17 +90,11 @@ function addDot(x, y) {
     pointTempleList.push(point)
     container.appendChild(point);
 }
-<<<<<<< HEAD
 
 var isMouseDown = false;
 // Click event to move the selected point
 container.addEventListener('mousemove', function (event) {
     if (selectedDot && isMouseDown) {
-=======
-// Click event to move the selected point
-container.addEventListener('click', function (event) {
-    if (selectedDot) {
->>>>>>> 5599b348166ca0c28d32ba9068b39a22ef2cbd14
         const containerRect = container.getBoundingClientRect();
         const scrolledX = event.clientX - containerRect.left + container.scrollLeft;
         const scrolledY = event.clientY - containerRect.top + container.scrollTop;
@@ -137,7 +112,6 @@ container.addEventListener('click', function (event) {
         selectedDot.style.top = scrolledY + 'px';
         updateLines(selectedDot);
 
-<<<<<<< HEAD
        
     }
 });
@@ -189,14 +163,6 @@ function updateLines(dot) {
        // linesToRedraw dizisini sıfırlayalım
        
 }
-=======
-        // Clear the selection after moving the point
-        selectedDot.style.backgroundColor = ''; 
-        selectedDot = null;
-    }
-});
-
->>>>>>> 5599b348166ca0c28d32ba9068b39a22ef2cbd14
 container.addEventListener('click', function (event) {
     const containerRect = container.getBoundingClientRect();
     const scrolledX = event.clientX - containerRect.left + container.scrollLeft;
@@ -276,6 +242,8 @@ container.addEventListener('click', function (event) {
 
         point.dataset.originalX = (scrolledX) / zoomLevel;
         point.dataset.originalY = (scrolledY) / zoomLevel;
+        
+
 
         pointLineList.push({ id: pointId, x: point.dataset.originalX, y: point.dataset.originalY });
         container.appendChild(point);
