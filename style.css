@@ -25,6 +25,7 @@
     background-color: rgb(5, 249, 249);
     border-radius: 50%;
     cursor: pointer;
+    z-index: 10;
 }
 
 #coordinates {

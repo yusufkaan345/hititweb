@@ -1,13 +1,20 @@
-var addingTrianglePoint = false; // Üçgen eklemek için kullanılacak değişken
-var addingLinePoint = false; // Çizgi eklemek için kullanıclacak değişken
+var isAddTriangle = false; // Üçgen eklemek için kullanılacak değişken
+var isAddLine = false; // Çizgi eklemek için kullanıclacak değişken
+var isAdd4 = false
+var isAdd5 = false
 
 const pointTriangleList = []; // Üçgen nokta koordinatlarını saklamak için bir dizi
-const pointTriangleListTrash = [];
+const pointTriangleListTrash = []; //İptal durumunda boşaltılacak liste
 const pointLineList = []; // Çizgi nokta koordinatlarını saklamak için bir dizi
 const pointLineListTrash = [];
+var pointTempleList=[]; //Şablon ekleme 4 nokta
+
 
 const pointTriangleSets = []; // Üçgen nokta kümelerini saklamak için bir dizi.Yani bir üçgen oluşturulduğunda dizi olarak tüm koordinatlar bunun içinde olacak 
 const pointLineSets = []; // Çizgi nokta kümelerini saklamak için kullanılacak dizi
+var pointTemple4=[];    // 4Lü nokta setini saklamak için dizi
+var pointTemple5=[];    // 5li nokta setini saklamak için dizi 
+
 const pointSets = []; // Üçgen ve çizgilerden oluşan bir harf seti. Save bastığında setler içerisindeki nokta ve çizgileri alıp bu son liste içerisinde o heceyi saklayacak
 const wordSets = []; //hecelerden oluşan kelimeleri sakladığımız yer
 const sentenceSets = []
@@ -38,6 +45,9 @@ const cancelButton = document.getElementById('cancelButton');
 var zoomInButton = document.getElementById("zoomInButton");
 var zoomOutButton = document.getElementById("zoomOutButton");
 var zoomLevel = 1;
+
+var selectedDot = null; // Seçilen noktanın referansını tutacak değişken
+
 zoomInButton.addEventListener("click", zoomIn);
 zoomOutButton.addEventListener("click", zoomOut);
 
@@ -54,23 +64,140 @@ document.getElementById('addWordBtn').addEventListener('click', addWordCard);
 document.getElementById('addSentenceBtn').addEventListener('click', addSentenceCard)
 document.getElementById('saveBtn').addEventListener('click', saveTransactions)
 
+function addButtonEventListener(btnId, flagName) {
+    document.getElementById(btnId).addEventListener('click', function () {
+        isAddTriangle = flagName === 'isAddTriangle';
+        isAddLine = flagName === 'isAddLine';
+        isAdd4 = flagName === 'isAdd4';
+        isAdd5 = flagName === 'isAdd5';
+    });
+}
+addButtonEventListener('addTriangleBtn', 'isAddTriangle');
+addButtonEventListener('addLineBtn', 'isAddLine');
+addButtonEventListener('add-4', 'isAdd4');
+addButtonEventListener('add-5', 'isAdd5');
+function updateLines(dot) {
+    var lines=[]
+    lineList.forEach(item=>{
+        if(item.endPoint == dot.id || item.startPoint==dot.id){
+            lines.push(document.getElementById(item.id))
+        }
+    })
+    console.log(lines)
+ 
+}
+function addDot(x, y) {
 
-document.getElementById('addTriangleBtn').addEventListener('click', function () {
-    addingTrianglePoint = true; // add triangle butonuna tıklandığında eklemeye başlayın
-    addingLinePoint = false;
+    var point = document.createElement('div');
+    point.className = 'point';
+    point.style.left = x + 'px';
+    point.style.top = y + 'px';
+    point.dataset.originalX = (x) / zoomLevel;
+    point.dataset.originalY = (y) / zoomLevel;
+    point.id = 'point-' + dotCounter; // Dotlara unique ID atama
+    dotCounter++;
+    pointTempleList.push(point)
+    container.appendChild(point);
+}
+var isMouseDown = false;
+container.addEventListener('mousemove', function (event) {
+    if (isMouseDown && selectedDot) {
+        var originalX = parseFloat(selectedDot.dataset.originalX);
+        var originalY = parseFloat(selectedDot.dataset.originalY);
+
+        // Fare konumunu al
+        var x = event.clientX - container.getBoundingClientRect().left;
+        var y = event.clientY - container.getBoundingClientRect().top;
+
+        // Ekranın o anki scroll durumunu ekle
+        x += container.scrollLeft;
+        y += container.scrollTop;
+
+        // Yeni konumu hesapla ve stile uygula
+        var newX = originalX + (x - originalX);
+        var newY = originalY + (y - originalY);
+
+        selectedDot.style.left = newX + 'px';
+        selectedDot.style.top = newY + 'px';
+        updateLines(selectedDot);
+    }
 });
 
-document.getElementById('addLineBtn').addEventListener('click', function () {
-    addingLinePoint = true; // add line butonuna tıklandığında eklemeye başlayın
-    addingTrianglePoint = false;
-});
+document.addEventListener('mousedown', function (event) { isMouseDown = true; });
+
+document.addEventListener('mouseup', function (event) {  isMouseDown = false;});
 
 container.addEventListener('click', function (event) {
     const containerRect = container.getBoundingClientRect();
     const scrolledX = event.clientX - containerRect.left + container.scrollLeft;
     const scrolledY = event.clientY - containerRect.top + container.scrollTop;
+    const selectedPoint = event.target;
+    
+    // Sadece nokta elementlerini seç
+    if (selectedPoint.classList.contains('point')) {
+        // Seçilen noktanın rengini değiştir
+        if (selectedDot) {
+            selectedDot.style.backgroundColor = ''; // Önceki seçili noktanın rengini sıfırla
+        }
+        selectedDot = selectedPoint;
+        selectedDot.style.backgroundColor = '#c44dff'; // Yeni seçilen noktanın rengini değiştir
+       
+    }
+   
+    if(isAdd4){
+        var x = event.clientX - container.getBoundingClientRect().left
+        var y = event.clientY - container.getBoundingClientRect().top
 
-    if (addingLinePoint) {
+        addDot(x, y);        //orta nokta   1     
+        addDot(x + 20, y - 10); // sağ yukarı 2           
+        addDot(x - 20, y - 10);  //sol yukarı 3
+        addDot(x, y + 40);     //alt nokta  4  
+        
+
+        const dot1=document.getElementById('point-' + (dotCounter-4)) //orta nokta    1  
+        const dot2 = document.getElementById('point-' + (dotCounter-3)) // sağ yukarı 2
+        const dot3 = document.getElementById('point-' + (dotCounter-2)) //sol yukarı  3
+        const dot4 = document.getElementById('point-' + (dotCounter-1)) //alt nokta   4  
+
+        drawLine(dot1,dot2);
+        drawLine(dot1,dot3);
+        drawLine(dot1,dot4);
+        drawLine(dot2,dot3);
+        const newPointSet = pointTempleList.slice();
+        pointTemple4.push(newPointSet);
+        pointTempleList.length=0;
+        isAdd4 = false;
+
+    }
+
+    if(isAdd5){
+        var x = event.clientX - container.getBoundingClientRect().left
+        var y = event.clientY - container.getBoundingClientRect().top
+
+        addDot(x - 20, y);     //1                             
+        addDot(x, y - 10);     //2                         
+        addDot(x, y + 10);     //3                     
+        addDot(x + 20, y - 25);  //4                         
+        addDot(x + 20, y + 25);  //5  
+
+        const dot1=document.getElementById('point-' + (dotCounter-5))   //orta en sol
+        const dot2 = document.getElementById('point-' + (dotCounter-4)) //yukarı 1
+        const dot3 = document.getElementById('point-' + (dotCounter-3)) //aşağı 1
+        const dot4 = document.getElementById('point-' + (dotCounter-2)) //yukarı 2  
+        const dot5 = document.getElementById('point-' + (dotCounter-1)) //aşağı 2
+
+        drawLine(dot1,dot2);  
+        drawLine(dot1,dot3);
+        drawLine(dot2,dot3);
+        drawLine(dot2,dot4);
+        drawLine(dot3,dot5);
+        const newPointSet = pointTempleList.slice();
+        pointTemple5.push(newPointSet);
+        pointTempleList.length=0;
+        isAdd5 = false;
+
+    }
+    if (isAddLine) {
         const point = document.createElement('div');
         const pointId = `point-${dotCounter}`;
         point.id = pointId;
@@ -79,13 +206,13 @@ container.addEventListener('click', function (event) {
 
         point.dataset.originalX = (scrolledX) / zoomLevel;
         point.dataset.originalY = (scrolledY) / zoomLevel;
-
+        
 
         // Çizginin eklenen noktası üçgenin hangi noktasına yakın for ile kontrol et
         if (pointLineList.length === 0) {
             let closestTrianglePoint = null; // En yakın üçgen noktasını saklamak için değişken
             let minDistance = Number.MAX_VALUE; // En küçük mesafeyi saklamak için değişken
-
+            
             for (const triangleSet of pointTriangleSets) {
                 for (const trianglePoint of triangleSet) {
                     if (!trianglePoint.connected) {
@@ -108,28 +235,30 @@ container.addEventListener('click', function (event) {
                 point.style.backgroundColor = 'red';
                 closestTrianglePoint.connected = true; // Bağlantıyı işaretle
             }
+            
         }
 
         pointLineList.push({ id: pointId, x: point.dataset.originalX, y: point.dataset.originalY });
         container.appendChild(point);
-
+         
         if (pointLineList.length == 2) {
             const firstPoint = pointLineList[0];
             const secondPoint = pointLineList[1];
 
-            drawLine(document.getElementById(firstPoint.id), document.getElementById(secondPoint.id));
 
+            drawLine(document.getElementById(firstPoint.id), document.getElementById(secondPoint.id));
+            
             const newPointSet = pointLineList.slice();
             pointLineSets.push(newPointSet);
-            addingLinePoint = false;
+            isAddLine = false;
             pointLineList.forEach(item => pointLineListTrash.push(item))
             pointLineList.length = 0;
 
         }
         
     }
-
-    if (addingTrianglePoint) {
+    
+    if (isAddTriangle) {
         const point = document.createElement('div');
         const pointId = `point-${dotCounter}`;
         point.id = pointId;
@@ -153,7 +282,7 @@ container.addEventListener('click', function (event) {
             if (pointTriangleList.length == 3) {
                 drawLine(document.getElementById(firstPoint.id), document.getElementById(endPoint.id));
                 trashLine.length=0;
-                addingTrianglePoint = false;
+                isAddTriangle = false;
                 const newPointSet = pointTriangleList.slice();
                 pointTriangleSets.push(newPointSet);
                 pointTriangleList.forEach(item => pointTriangleListTrash.push(item))
@@ -168,7 +297,7 @@ container.addEventListener('click', function (event) {
             pointTriangleListTrash = pointTriangleListTrash.filter(item => !syllableListIds.includes(item.id));
         }
     }
-
+   
     updateLabelPositions();
 });
 
@@ -186,7 +315,12 @@ cancelButton.addEventListener('click', function () {
     removeElements(pointLineListTrash);
     removeElements(lineList);
     removeElements(pointTriangleListTrash);
-
+    pointTemple4.forEach(item=>{
+        removeElements(item)
+    })
+    pointTemple5.forEach(item=>{
+        removeElements(item)
+    })
     // Silme işleminden sonra dizileri temizleyin
     lineList.length = 0;
     connectedPoints.length = 0;
@@ -194,8 +328,8 @@ cancelButton.addEventListener('click', function () {
     pointTriangleSets.length = 0;
     pointLineSets.length = 0;
 
-    addingLinePoint = false;
-    addingTrianglePoint = false;
+    isAddLine = false;
+    isAddTriangle = false;
 
 });
 function saveTransactions(){
@@ -282,7 +416,34 @@ function updateLinePositions() {
         setPositionAndTransform(line, x1, y1, x2, y2); // Satırın pozisyonunu ayarlar ve döndürür
     });
 }
+// İki nokta arasında bir çizgi oluşturur
+function drawLine(point1, point2) {
+    const line = document.createElement("div");
+    line.className = 'line'
+    line.id = `line-${lineCounter}`
+    lineCounter++;
+    //to zoom in and out case
+    line.dataset.startPoint = point1.id;
+    line.dataset.endPoint = point2.id;
+    line.style.cssText = `
+    position: absolute;
+    border: 0.2px solid white;
+    background-color: white;
+    width: 0.2px;
+    height: 0.2px;
+    `;
+    const [x1, y1] = [parseFloat(point1.dataset.originalX), parseFloat(point1.dataset.originalY)];
+    const [x2, y2] = [parseFloat(point2.dataset.originalX), parseFloat(point2.dataset.originalY)];
 
+    setPositionAndTransform(line, x1, y1, x2, y2);
+
+    const lineId = line.id;
+    const startId = point1.id;
+    const endId = point2.id;
+    lineList.push({ id: lineId, startPoint: startId, endPoint: endId });
+
+    container.appendChild(line);
+}
 // Verilen bir satırın başlangıç ve bitiş noktalarını alır ve onların koordinatlarını döndürür
 function getLineCoordinates(line) {
     // Satırın başlangıç ve bitiş noktalarının id'lerini alır
@@ -297,39 +458,6 @@ function getLineCoordinates(line) {
 
     return [x1, y1, x2, y2];
 }
-
-// İki nokta arasında bir çizgi oluşturur
-function drawLine(point1, point2) {
-    const line = document.createElement("div");
-    line.className = 'line'
-    line.id = `line-${lineCounter}`
-    lineCounter++;
-
-    //to zoom in and out case
-    line.dataset.startPoint = point1.id;
-    line.dataset.endPoint = point2.id;
-
-    line.style.cssText = `
-    position: absolute;
-    border: 0.2px solid white;
-    background-color: white;
-    width: 0.2px;
-    height: 0.2px;
-    `;
-
-    const [x1, y1] = [parseFloat(point1.dataset.originalX), parseFloat(point1.dataset.originalY)];
-    const [x2, y2] = [parseFloat(point2.dataset.originalX), parseFloat(point2.dataset.originalY)];
-
-    setPositionAndTransform(line, x1, y1, x2, y2);
-
-    const lineId = line.id;
-    const startId = point1.id;
-    const endId = point2.id;
-    lineList.push({ id: lineId, startPoint: startId, endPoint: endId });
-
-    container.appendChild(line);
-}
-
 // İki nokta arasında bir çizginin konumunu ve dönüşümünü ayarlar
 function setPositionAndTransform(line, x1, y1, x2, y2) {
     line.style.left = (x1 + 2.4) + 'px';
@@ -347,7 +475,6 @@ function calculateWidthAndRotation(x1, y1, x2, y2) {
     const rotation = Math.atan2(y2 - y1, x2 - x1);
     return [width, rotation];
 }
-
 function specialCharCase(event) {
     var clickedChar = event.target.innerText;
     var heceIsmi = document.getElementById('hece_ismi');
