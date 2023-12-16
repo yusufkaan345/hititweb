@@ -47,6 +47,25 @@ var zoomOutButton = document.getElementById("zoomOutButton");
 var zoomLevel = 1;
 
 var selectedDot = null; // Seçilen noktanın referansını tutacak değişken
+// Add event listener to each point for selection
+const points = document.querySelectorAll('.point');
+points.forEach(point => {
+    point.addEventListener('click', function(event) {
+        if (selectedDot === point) {
+            // If the clicked point is already selected, deselect it
+            selectedDot.style.backgroundColor = '';
+            selectedDot = null;
+        } else {
+            // Otherwise, select the clicked point
+            if (selectedDot) {
+                selectedDot.style.backgroundColor = '';
+            }
+            selectedDot = point;
+            selectedDot.style.backgroundColor = '#c44dff';
+        }
+    });
+});
+
 
 zoomInButton.addEventListener("click", zoomIn);
 zoomOutButton.addEventListener("click", zoomOut);
@@ -99,33 +118,31 @@ function addDot(x, y) {
     pointTempleList.push(point)
     container.appendChild(point);
 }
-var isMouseDown = false;
-container.addEventListener('mousemove', function (event) {
-    if (isMouseDown && selectedDot) {
-        var originalX = parseFloat(selectedDot.dataset.originalX);
-        var originalY = parseFloat(selectedDot.dataset.originalY);
+// Click event to move the selected point
+container.addEventListener('click', function (event) {
+    if (selectedDot) {
+        const containerRect = container.getBoundingClientRect();
+        const scrolledX = event.clientX - containerRect.left + container.scrollLeft;
+        const scrolledY = event.clientY - containerRect.top + container.scrollTop;
 
-        // Fare konumunu al
-        var x = event.clientX - container.getBoundingClientRect().left;
-        var y = event.clientY - container.getBoundingClientRect().top;
+        // Calculate new original coordinates for the selected point
+        const newOriginalX = scrolledX / zoomLevel;
+        const newOriginalY = scrolledY / zoomLevel;
 
-        // Ekranın o anki scroll durumunu ekle
-        x += container.scrollLeft;
-        y += container.scrollTop;
+        // Update the dataset values for the selectedDot
+        selectedDot.dataset.originalX = newOriginalX;
+        selectedDot.dataset.originalY = newOriginalY;
 
-        // Yeni konumu hesapla ve stile uygula
-        var newX = originalX + (x - originalX);
-        var newY = originalY + (y - originalY);
-
-        selectedDot.style.left = newX + 'px';
-        selectedDot.style.top = newY + 'px';
+        // Update the visual position of the selectedDot
+        selectedDot.style.left = scrolledX + 'px';
+        selectedDot.style.top = scrolledY + 'px';
         updateLines(selectedDot);
+
+        // Clear the selection after moving the point
+        selectedDot.style.backgroundColor = ''; 
+        selectedDot = null;
     }
 });
-
-document.addEventListener('mousedown', function (event) { isMouseDown = true; });
-
-document.addEventListener('mouseup', function (event) {  isMouseDown = false;});
 
 container.addEventListener('click', function (event) {
     const containerRect = container.getBoundingClientRect();
