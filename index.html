@@ -67,7 +67,7 @@
                     <button id="zoomOutButton" class="btn btn-info">Uzaklaştır -</button>
                 </div>
 
-                <div class="mt-5 syllables-container border  " id="syllables-container">
+                <div class="mt-5 syllables-container border  " style="height: 180px;" id="syllables-container">
                     <h6>Kelimenin Heceleri:</h6>
                     <div id="syllables">
                         <ul id="syllableList" class="d-flex  ">
@@ -81,6 +81,16 @@
                 <input type="text" id="kelime_ismi"
                     class=" input w-100 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     placeholder="Kelime İsmi" required>
+                
+                <div class="mt-3">
+                    <input type="radio" id="begin" name="word_location" value="Başlangıç" required>
+                    <label for="begin"> Başlangıç </label> <br>
+                    <input type="radio" id="mid" name="word_location" value="Orta" required>
+                    <label for="mid"> Orta </label> <br>
+                    <input type="radio" id="end" name="word_location" value="Son" required>
+                    <label for="begin"> Son </label> <br>
+                </div>
+                <p for="cumle_ismi" class="block mb-2 mt-3 text-sm font-medium text-gray-900 dark:text-white">
                 <p for="cumle_ismi" class="block mb-2 mt-5 text-sm font-medium text-gray-900 dark:text-white">
                     Cümle
                     İsmi</p>
@@ -90,23 +100,24 @@
             </div>
             <div class="d-flex flex-column mt-4 mr-8  button-container ">
 
-                <button id="addTriangleBtn" class="btn btn-success my-2 "> &#9650; Manuel 4  </button>
+                <button id="addTriangleBtn" class="btn btn-success my-2 "> &#9650; Manuel 4 </button>
                 <!-- &#183; Nokta sembulü ,&#9650; üçgen sembolu-->
-                <button id="addLineBtn" class="btn btn-success my-2"> &#9650; Manuel 5  </button>
-                <button id="add-4" class="btn btn-success my-2"> Template 4  </button>
-                <button id="add-5" class="btn btn-success my-2"> Template 5  </button>
+                <button id="addLineBtn" class="btn btn-success my-2"> &#9650; Manuel 5 </button>
+                <button id="add-4" class="btn btn-success my-2"> Template 4 </button>
+                <button id="add-5" class="btn btn-success my-2"> Template 5 </button>
+                <button id="rotateButton" class="btn btn-success my-2"> Rotate-> </button>
 
                 <button id="cancelButton" class="btn btn-danger my-2">İptal</button>
 
 
                 <button id="addSyllable" class="btn btn-warning my-2"> Hece Ekle </button>
-               
 
-                <div style="margin-top: 50px;">
+
+                <div style="margin-top: 120px;">
                     <button id="addWordBtn" class="btn btn-warning my-2"> Kelime Ekle </button>
                     <button id="addSentenceBtn" class="btn btn-warning my-2 mt-5"> Cümle Ekle </button>
 
-                    <button id="saveBtn" class="btn btn-primary my-2"> Kaydet </button>
+                    <button id="saveBtn" class="btn btn-primary my-5"> Kaydet </button>
                 </div>
 
 
