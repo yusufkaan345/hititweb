@@ -63,7 +63,7 @@ specialChars.forEach(function (char) {
 document.getElementById('addSyllable').addEventListener('click', addSyllableCardToList);
 document.getElementById('addWordBtn').addEventListener('click', addWordCard);
 document.getElementById('addSentenceBtn').addEventListener('click', addSentenceCard)
-document.getElementById('saveBtn').addEventListener('click', saveTransactions)
+document.getElementById('saveBtn').addEventListener('click', saveBtnConfirm)
 
 function addButtonEventListener(btnId, flagName) {
     document.getElementById(btnId).addEventListener('click', function () {
@@ -644,6 +644,15 @@ function updateSyllableList() {
 function addWordCard() {
     const wordList = document.getElementById('wordList');
     const kelimeIsmi = document.getElementById('kelime_ismi').value;
+    const wordLocation = getSelectedRadioValue("word_location");
+
+    if (kelimeIsmi == "") {
+        alert("kelime ismi bölümünü doldurunuz")
+    }
+
+    if (wordLocation == "") {
+        alert("kelimenin konumunu seçiniz")
+    }
 
     if (pointSets.length > 0 && kelimeIsmi != "") {
 
@@ -690,6 +699,10 @@ function addWordCard() {
 function addSentenceCard() {
     const sentencesList = document.getElementById('sentencesList');
     const cumleIsmi = document.getElementById('cumle_ismi').value;
+
+    if(cumleIsmi == "") {
+        alert("cümle ismi bölümünü doldurumuz")
+    }
 
     // Eğer wordSets dizisi doluysa ve cümle ismi boş değilse devam et
     if (wordSets.length > 0 && cumleIsmi != "") {
@@ -820,4 +833,23 @@ function deleteCardCumle(index) {
     }
 
     addSentenceCard();
+}
+
+function saveBtnConfirm() {
+    const heceIsmi = document.getElementById("hece_ismi").value;
+    const uygarlik = getSelectedRadioValue("uygarlik");
+    const kelimeIsmi = document.getElementById("kelime_ismi").value;
+    const wordLocation = getSelectedRadioValue("word_location");
+    const cumleIsmi = document.getElementById('cumle_ismi').value;
+
+    saveBool = confirm("Yaptığınız Ekleme" + 
+                        "\nHece İsmi: " + heceIsmi +
+                        "\nUygarlık: " + uygarlik +
+                        "\nKelime İsmi: " + kelimeIsmi +
+                        "\nKelime Konumu: " + wordLocation +
+                        "\nCümle İsmi: " + cumleIsmi);
+    
+    if(saveBool) {
+        saveTransactions();
+    }
 }
