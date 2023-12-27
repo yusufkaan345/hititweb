@@ -9,7 +9,6 @@ const pointManuel5 = []; // Çizgi nokta koordinatlarını saklamak için bir di
 const pointManuel5Trash = [];
 var pointTempleList = []; //Şablon ekleme 4 nokta
 
-
 const pointManuel4Sets = []; // Üçgen nokta kümelerini saklamak için bir dizi.Yani bir üçgen oluşturulduğunda dizi olarak tüm koordinatlar bunun içinde olacak 
 const pointManuel5Sets = []; // Çizgi nokta kümelerini saklamak için kullanılacak dizi
 var pointTemple4 = [];    // 4Lü nokta setini saklamak için dizi
@@ -662,7 +661,7 @@ function updateSyllableList() {
     // Her bir pointSet için hece ismini ve seçilen radyo değerini filtreler ve alır
     pointSets.forEach((pointSet, index) => {
         const filteredPointSet = pointSet.filter(point => point.hasOwnProperty('x') && point.hasOwnProperty('y'));
-        const heceIsmi = pointSet.find(point => point.hasOwnProperty('heceismi'))?.heceismi || '';
+        const heceIsmi = pointSet.find(point => point.hasOwnProperty('heceIsmi'))?.heceIsmi || '';
         const selectedRadioValue = pointSet.find(point => point.hasOwnProperty('selectedRadioValue'))?.selectedRadioValue || '';
 
         // Eğer filtrelenmiş nokta seti boş değilse, yeni bir kart oluşturur ve listeye ekler
@@ -681,17 +680,20 @@ function updateSyllableList() {
     });
 }
 
-function addWordCard() {
+function addWordCard(evt) {
     const wordList = document.getElementById('wordList');
     const kelimeIsmi = document.getElementById('kelime_ismi').value;
     const wordLocation = getSelectedRadioValue("word_location");
-
-    if (kelimeIsmi == "") {
-        alert("kelime ismi bölümünü doldurunuz")
-    }
-
-    if (wordLocation == "") {
-        alert("kelimenin konumunu seçiniz")
+    const target = evt.target.id;
+    
+    if(target == "addWordBtn") {
+        if (kelimeIsmi == "") {
+            alert("kelime ismi bölümünü doldurunuz");
+        }
+    
+        if (wordLocation == "") {
+            alert("kelimenin konumunu seçiniz");
+        }
     }
 
     if (pointSets.length > 0 && kelimeIsmi != "" && wordLocation!="") {
@@ -709,7 +711,7 @@ function addWordCard() {
             card.classList.add('wordCard');
             // Kelimeye ait hece listesini oluşturur
             const heceListItems = word.heceList
-                .map((hece, heceIndex) => `<li>Hece ${heceIndex + 1}: Hece İsmi: ${hece[hece.length - 2].heceismi}, Dil: ${hece[hece.length - 1].selectedRadioValue}</li>`)
+                .map((hece, heceIndex) => `<li>Hece ${heceIndex + 1}: Hece İsmi: ${hece[hece.length - 2].heceIsmi}, Dil: ${hece[hece.length - 1].selectedRadioValue}</li>`)
                 .join('');
             // Oluşturulan kartın içeriğini hazırlar ve listeye ekler
             card.innerHTML = `
@@ -745,11 +747,15 @@ function saveBtnConfirm() {
         saveTransactions();
     }
 }
-function addSentenceCard() {
+function addSentenceCard(evt) {
     const sentencesList = document.getElementById('sentencesList');
     const cumleIsmi = document.getElementById('cumle_ismi').value;
-    if(cumleIsmi == "") {
-        alert("cümle ismi bölümünü doldurumuz")
+    const target = evt.target.id;
+
+    if (target == "addSentenceBtn") {
+        if (cumleIsmi == "") {
+            alert("cümle ismi kısmını doldurunuz");
+        }
     }
         // Eğer wordSets dizisi doluysa ve cümle ismi boş değilse devam et
 
@@ -808,6 +814,7 @@ function deleteCard(index) {
 }
 
 function deleteCardKelime(index) {
+
     // Eğer verilen index wordSets dizisinin geçerli bir indeksi ise devam et
     if (index >= 0 && index < wordSets.length) {
         // Silinecek öğeleri belirtmek için silinecek öğelerin listesini al
@@ -831,7 +838,7 @@ function deleteCardKelime(index) {
         if (card) {
             card.remove(); // Kartı sil
         }
-        addWordCard(); // Kelime kartlarını güncelle
+        addWordCard(evt); // Kelime kartlarını güncelle
     }
 }
 
@@ -859,5 +866,5 @@ function deleteCardCumle(index) {
     const card = sentencesList.querySelectorAll('.sentencesCard')[index];
 
     if (card) { card.remove(); }
-    addSentenceCard();
+    addSentenceCard(evt);
 }
