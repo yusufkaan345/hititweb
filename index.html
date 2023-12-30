@@ -18,7 +18,7 @@
                 <img id="tablet" alt="resim" class="image">
             </div>
 
-            <div class="mt-3  middle ">
+            <div class="mt-3 middle ">
                 <div class=" input-container ">
                     <p for="hece_ismi" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hece
                         İsmi</p>
@@ -81,6 +81,9 @@
                 <input type="text" id="kelime_ismi"
                     class=" input w-100 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     placeholder="Kelime İsmi" required>
+                <input type="text" id="kelime_yorum"
+                       class="input w-100 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-2"
+                       placeholder="Kelime Yorumu (optional)">
                 
                 <div class="mt-3">
                     <input type="radio" id="begin" name="word_location" value="Başlangıç" required>
@@ -90,13 +93,15 @@
                     <input type="radio" id="end" name="word_location" value="Son" required>
                     <label for="begin"> Son </label> <br>
                 </div>
-                <p for="cumle_ismi" class="block mb-2 mt-3 text-sm font-medium text-gray-900 dark:text-white">
                 <p for="cumle_ismi" class="block mb-2 mt-5 text-sm font-medium text-gray-900 dark:text-white">
                     Cümle
                     İsmi</p>
                 <input type="text" id="cumle_ismi"
                     class=" input w-100 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     placeholder="Cümle İsmi" required>
+                <input type="text" id="cumle_yorum"
+                       class=" input w-100 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-2"
+                       placeholder="Cümle Yorumu (optional)">
             </div>
             <div class="d-flex flex-column mt-4 mr-8  button-container ">
 
@@ -114,9 +119,8 @@
 
 
                 <div style="margin-top: 120px;">
-                    <button id="addWordBtn" class="btn btn-warning my-2"> Kelime Ekle </button>
-                    <button id="addSentenceBtn" class="btn btn-warning my-2 mt-5"> Cümle Ekle </button>
-
+                    <button id="addWordBtn" class="btn btn-warning my-5"> Kelime Ekle </button>
+                    <button id="addSentenceBtn" class="btn btn-warning"> Cümle Ekle </button>
                     <button id="saveBtn" class="btn btn-primary my-5"> Kaydet </button>
                 </div>
 

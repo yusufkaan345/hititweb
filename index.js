@@ -16,7 +16,7 @@ var pointTemple5 = [];    // 5li nokta setini saklamak için dizi
 
 const pointSets = []; // Üçgen ve çizgilerden oluşan bir harf seti. Save bastığında setler içerisindeki nokta ve çizgileri alıp bu son liste içerisinde o heceyi saklayacak
 const wordSets = []; //hecelerden oluşan kelimeleri sakladığımız yer
-const sentenceSets = []
+const sentenceSets = [];
 
 const container = document.getElementById('container-image');
 
@@ -382,7 +382,7 @@ function saveTransactions() {
 function changeImage(offset) {
     currentImageIndex += offset;
     if (currentImageIndex > totalImages) {
-        currentImageIndex = 1; saveBtn
+        currentImageIndex = 1;
     } else if (currentImageIndex < 1) {
         currentImageIndex = totalImages;
     }
@@ -685,6 +685,7 @@ function addWordCard(evt) {
     const kelimeIsmi = document.getElementById('kelime_ismi').value;
     const wordLocation = getSelectedRadioValue("word_location");
     const target = evt.target.id;
+    const kelimeYorum = document.getElementById("kelime_yorum").value;
     
     if(target == "addWordBtn") {
         if (kelimeIsmi == "") {
@@ -698,7 +699,7 @@ function addWordCard(evt) {
 
     if (pointSets.length > 0 && kelimeIsmi != "" && wordLocation!="") {
         // PointSets'teki tüm hece listelerini tek bir liste öğesi olarak wordSets'e ekle
-        wordSets.push({ kelime: kelimeIsmi, heceList: [...pointSets] });
+        wordSets.push({ kelime: kelimeIsmi, heceList: [...pointSets], kelimeYorum: kelimeYorum });
         // PointSets'i temizle
         pointSets.length = 0;
         // Hece listesini temizle
@@ -719,7 +720,8 @@ function addWordCard(evt) {
                     <div class="card-body">
                         <h6>Kelime: ${word.kelime}</h6>
                         <ul>${heceListItems}</ul>
-                        <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCardKelime(${index})">Delete</button> 
+                        <p> <b>Yorum: </b> ${kelimeYorum}</p>
+                        <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCardKelime(${index})">Delete</button>                    
                     </div>
                 </div>
             `;
@@ -727,6 +729,11 @@ function addWordCard(evt) {
         });
         // Kelime giriş alanını temizler
         document.getElementById('kelime_ismi').value = "";
+        let radioButtons = document.getElementsByName("word_location");
+        for (let i = 0; i < radioButtons.length; i++) {
+            radioButtons[i].checked = false;
+        }
+        document.getElementById("kelime_yorum").value = "";
     }
 }
 function saveBtnConfirm() {
@@ -751,6 +758,7 @@ function addSentenceCard(evt) {
     const sentencesList = document.getElementById('sentencesList');
     const cumleIsmi = document.getElementById('cumle_ismi').value;
     const target = evt.target.id;
+    const cumleYorum = document.getElementById("cumle_yorum").value;
 
     if (target == "addSentenceBtn") {
         if (cumleIsmi == "") {
@@ -761,7 +769,7 @@ function addSentenceCard(evt) {
 
     if (wordSets.length > 0 && cumleIsmi != "") {
         // Yeni bir cümle seti oluşturup wordSets'teki kelime listesini kopyala
-        sentenceSets.push({ cumleIsmi: cumleIsmi, kelimeList: [...wordSets] });
+        sentenceSets.push({ cumleIsmi: cumleIsmi, kelimeList: [...wordSets], cumleYorum: cumleYorum });
         wordSets.length = 0;
         const wordList = document.getElementById('wordList');
         wordList.innerHTML = '';
@@ -777,8 +785,9 @@ function addSentenceCard(evt) {
             card.innerHTML = `
                 <div class="card">
                     <div class="card-body">
-                        <h6>Cumle: ${sentence.cumleIsmi}</h6>
+                        <h6>Cümle: ${sentence.cumleIsmi}</h6>
                         <ul>${wordListItems}</ul>
+                        <p> <b>Yorum: </b> ${cumleYorum}</p>
                         <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCardCumle(${index})">Delete</button>
                     </div>
                 </div>
@@ -787,6 +796,7 @@ function addSentenceCard(evt) {
         });
         // Input alanını temizleme
         document.getElementById('cumle_ismi').value = "";
+        document.getElementById("cumle_yorum").value = "";
     }
 }
 
