@@ -669,10 +669,13 @@ function updateSyllableList() {
             const card = document.createElement('li');
             card.innerHTML = `
                 <div class="card mr-3" style="width:175px; height:100px;">
-                    <h6 style="font-size:12px;">Hece Seti ${index + 1}</h6>
-                    <div style="font-size:12px;">Hece İsmi: ${heceIsmi}</div>
-                    <div style="font-size:12px;">Dil: ${selectedRadioValue}</div>
-                    <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCard(${index})">Delete</button> 
+                    <h6 style="font-size:12px; margin-left: 5px;">Hece Seti ${index + 1}</h6>
+                    <div style="font-size:12px; margin-left: 5px;">Hece İsmi: ${heceIsmi}</div>
+                    <div style="font-size:12px; margin-left: 5px;">Dil: ${selectedRadioValue}</div>
+                    <div class="button-container" style="display: flex;">
+                        <button class="btn-danger" style="width:50px; height:20px; font-size:10px; margin: 5px;" onclick="deleteCard(${index})">Delete</button> 
+                        <button class="btn-success" style="width:50px; height:20px; font-size:10px; margin: 5px;" onclick="editCard(${index})">Edit</button>
+                    </div>   
                 </div>
             `;
             syllableList.appendChild(card);
@@ -721,7 +724,10 @@ function addWordCard(evt) {
                         <h6>Kelime: ${word.kelime}</h6>
                         <ul>${heceListItems}</ul>
                         <p> <b>Yorum: </b> ${kelimeYorum}</p>
-                        <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCardKelime(${index})">Delete</button>                    
+                        <div class="button-container" style="display: flex;">
+                            <button class="btn-danger" style="width:50px; height:20px; font-size:10px; margin: 5px;" onclick="deleteCardKelime(${index})">Delete</button>
+                            <button class="btn-success" style="width:50px; height:20px; font-size:10px; margin: 5px;" onclick="editCardKelime(${index})">Edit</button>
+                        </div>               
                     </div>
                 </div>
             `;
@@ -788,7 +794,10 @@ function addSentenceCard(evt) {
                         <h6>Cümle: ${sentence.cumleIsmi}</h6>
                         <ul>${wordListItems}</ul>
                         <p> <b>Yorum: </b> ${cumleYorum}</p>
-                        <button class="btn-danger" style="width:50px; height:20px; font-size:10px" onclick="deleteCardCumle(${index})">Delete</button>
+                        <div class="button-container" style="display: flex;">
+                            <button class="btn-danger" style="width:50px; height:20px; font-size:10px; margin: 5px;" onclick="deleteCardCumle(${index})">Delete</button>
+                            <button class="btn-success" style="width:50px; height:20px; font-size:10px; margin: 5px;" onclick="editCardCumle(${index})">Edit</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -878,3 +887,7 @@ function deleteCardCumle(index) {
     if (card) { card.remove(); }
     addSentenceCard(evt);
 }
+
+function editCard(index) {}
+function editCardKelime(index) {}
+function editCardCumle(index) {}
